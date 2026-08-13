@@ -1,27 +1,54 @@
 import React, { useState } from 'react';
-import { Droplet, Award, Zap, ChevronRight, ShieldCheck, Activity, Thermometer, Gauge, TestTube } from 'lucide-react';
-import { getSimulatedRealtimeWaterData } from '../api/waterQualityApi';
+import { Droplet, Award, Zap, ChevronRight, ShieldCheck, Activity, Thermometer, Gauge, TestTube, MapPin } from 'lucide-react';
+import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
 
 export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
-  const [realtimeData] = useState(getSimulatedRealtimeWaterData());
+  const [selectedStationId, setSelectedStationId] = useState('2014A65'); // Default: 온천천
+  const realtimeData = getStationWaterData(selectedStationId);
   const { metrics, bodTrend24h } = realtimeData;
 
   return (
     <div className="home-tab" style={{ padding: '16px' }}>
+      {/* Station Selector Buttons (온천천, 동천, 괴정천, 임하천) */}
+      <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '4px' }}>
+        {BUSAN_RIVER_STATIONS.map((st) => (
+          <button
+            key={st.id}
+            onClick={() => setSelectedStationId(st.id)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '20px',
+              border: selectedStationId === st.id ? 'none' : '1px solid var(--gray-300)',
+              background: selectedStationId === st.id ? 'var(--primary)' : 'white',
+              color: selectedStationId === st.id ? 'white' : 'var(--gray-700)',
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}
+          >
+            {st.river}
+          </button>
+        ))}
+      </div>
+
       {/* 1. Main River Status Banner */}
       <div className="card" style={{
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        background: selectedStationId === '2014A70' || selectedStationId === '2014A85'
+          ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+          : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         color: 'white',
         padding: '20px',
         border: 'none',
         marginBottom: '14px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.2)', padding: '3px 10px', borderRadius: '12px', fontWeight: 700 }}>
-            📍 {realtimeData.stationName}
+          <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.2)', padding: '3px 10px', borderRadius: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <MapPin size={12} /> {realtimeData.stationName}
           </span>
           <span style={{ fontSize: '0.72rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <ShieldCheck size={12} /> 공공 API 데이터 검증
+            <ShieldCheck size={12} /> 공공데이터포털 연동
           </span>
         </div>
 
@@ -40,9 +67,9 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
       <div className="card" style={{ marginBottom: '14px', padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--gray-900)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Activity size={16} color="var(--primary)" /> 실시간 주요 수질 측정 지표
+            <Activity size={16} color="var(--primary)" /> {realtimeData.river} 실시간 측정 지표
           </h4>
-          <span style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>공공데이터포털 연동</span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>국립환경과학원 API</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
@@ -81,12 +108,12 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
       {/* 3. Recent 24-Hour BOD Trend Graph */}
       <div className="card" style={{ marginBottom: '14px', padding: '16px' }}>
         <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '10px', color: 'var(--gray-900)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Activity size={16} color="var(--blue)" /> 최근 24시간 BOD 변화량 추이
+          <Activity size={16} color="var(--blue)" /> {realtimeData.river} 24시간 BOD 변화 추이
         </h4>
 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '90px', padding: '10px 4px 0', borderBottom: '1px solid var(--gray-200)' }}>
           {bodTrend24h.map((item, idx) => {
-            const heightPercent = (item.bod / 2.5) * 100;
+            const heightPercent = Math.min(100, (item.bod / 5.0) * 100);
             return (
               <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
                 <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '4px' }}>
@@ -94,8 +121,8 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
                 </span>
                 <div style={{
                   width: '18px',
-                  height: `${heightPercent}%`,
-                  background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+                  height: `${Math.max(15, heightPercent)}%`,
+                  background: item.bod > 3.0 ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
                   borderRadius: '4px 4px 0 0',
                   transition: 'height 0.3s'
                 }}></div>
