@@ -33,10 +33,11 @@ export default function App() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showFeedDrawer, setShowFeedDrawer] = useState(false);
 
-  // Upload modal state
+  // Upload modal state with Odor Level survey
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadType, setUploadType] = useState('positive');
   const [uploadTag, setUploadTag] = useState('맑은 물 관찰');
+  const [uploadOdorLevel, setUploadOdorLevel] = useState('🌿 악취 안 남');
   const [uploadComment, setUploadComment] = useState('');
   const [uploadPhoto, setUploadPhoto] = useState('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80');
   const [toastMessage, setToastMessage] = useState(null);
@@ -186,7 +187,7 @@ export default function App() {
     showNotification("🎉 시민 수질 측정 완료! 동백전 +1,000원 적립되었습니다.");
   };
 
-  // Handle Upload Form Submit
+  // Handle Upload Form Submit (Updated reward: Dongbaekjeon +10 KRW)
   const handleUploadSubmit = (e) => {
     e.preventDefault();
     const newRecord = {
@@ -194,8 +195,8 @@ export default function App() {
       riverId: selectedStationId,
       riverName: currentStation.river,
       type: uploadType,
-      tag: uploadTag || (uploadType === 'positive' ? '맑은 물 관찰' : '오염 제보'),
-      text: uploadComment || (uploadType === 'positive' ? '하천 환경이 매우 깨끗하고 쾌적합니다.' : '하천 수질 오염 및 이상 현상이 발견되었습니다.'),
+      tag: `${uploadTag} [${uploadOdorLevel}]`,
+      text: uploadComment || (uploadType === 'positive' ? '하천 환경이 아주 쾌적합니다.' : '하천 수질 이상 제보입니다.'),
       author: '시민 (나)',
       time: '방금 전',
       badgeCount: 1,
@@ -207,12 +208,12 @@ export default function App() {
     setRecords([newRecord, ...records]);
     setShowUploadModal(false);
     setUploadComment('');
-    showNotification(`🎉 지도에 사진이 등록되었습니다! [${currentStation.river}] 동백전 +1,000원 적립`);
+    showNotification(`🎉 지도에 사진 핀이 등록되었습니다! [${currentStation.river}] 동백전 +10원 적립 완료!`);
   };
 
   const currentRiverRecords = records.filter(r => r.riverId === selectedStationId);
 
-  // 10보당 1원 적립 (두자리수 포맷ting)
+  // 10보당 1원 적립
   const earnedDongbaek = Math.floor(walkSteps / 10).toString().padStart(2, '0');
 
   return (
@@ -365,7 +366,7 @@ export default function App() {
           </button>
         </nav>
 
-        {/* 5. Active Walking Screen matching user screenshot design exactly */}
+        {/* 5. Active Walking Screen */}
         {isWalking && (
           <div className="walking-screen">
             <div className="walking-timer">
@@ -382,7 +383,7 @@ export default function App() {
                 {walkSteps.toLocaleString()}보
               </div>
 
-              {/* Clean Light Blue Pill Banner matching user screenshot exactly (No emojis, no top extra banner) */}
+              {/* Clean Light Blue Pill Banner */}
               <div style={{
                 background: '#f0f7ff',
                 color: '#475569',
@@ -402,7 +403,6 @@ export default function App() {
             </div>
 
             <div className="walking-bottom-actions">
-              {/* Clicking Upload triggers Real WebRTC Camera directly */}
               <button 
                 className="walking-action-btn"
                 onClick={startWalkingCamera}
@@ -571,7 +571,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 7. Upload Modal */}
+        {/* 7. Upload Modal with Odor Level Survey & Dongbaekjeon +10 KRW reward */}
         {showUploadModal && (
           <div className="upload-modal-backdrop" onClick={() => setShowUploadModal(false)}>
             <div className="upload-modal" onClick={e => e.stopPropagation()}>
@@ -587,6 +587,7 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Record Type Toggle */}
               <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
                 기록 유형 선택
               </div>
@@ -613,6 +614,7 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Tag Subject Dropdown */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
                   태그 주제
@@ -639,6 +641,41 @@ export default function App() {
                 </select>
               </div>
 
+              {/* User Requested: Odor Level Survey (악취 정도 조사 필드) */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#475569', marginBottom: '6px' }}>
+                  🌸 현장 악취 정도 조사
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                  {[
+                    { label: '🤢 악취 심함' },
+                    { label: '😷 악취 있음' },
+                    { label: '🙂 보통' },
+                    { label: '🌿 악취 안 남' }
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => setUploadOdorLevel(item.label)}
+                      style={{
+                        padding: '8px 2px',
+                        borderRadius: '12px',
+                        border: uploadOdorLevel === item.label ? '2px solid #1677ff' : '1px solid #cbd5e1',
+                        background: uploadOdorLevel === item.label ? '#eff6ff' : '#ffffff',
+                        color: uploadOdorLevel === item.label ? '#1677ff' : '#64748b',
+                        fontSize: '0.7rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Photo Display */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
                   촬영된 현장 사진 (지도 위에 표시됩니다)
@@ -655,6 +692,7 @@ export default function App() {
                 </div>
               </div>
 
+              {/* One line report input */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
                   한줄 제보 기록
@@ -668,12 +706,13 @@ export default function App() {
                 />
               </div>
 
+              {/* User Requested: Updated reward to Dongbaekjeon +10 KRW (동백전 +10원) */}
               <button 
                 type="button"
                 className="btn-submit"
                 onClick={handleUploadSubmit}
               >
-                📍 지도에 사진 핀 올리기 (동백전 +1,000원)
+                📍 지도에 사진 핀 올리기 (동백전 +10원)
               </button>
             </div>
           </div>
