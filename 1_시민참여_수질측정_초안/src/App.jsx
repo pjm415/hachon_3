@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HomeTab from './components/HomeTab';
 import MeasureTab from './components/MeasureTab';
+import BenefitsTab from './components/BenefitsTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
 import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2 } from 'lucide-react';
 import './index.css';
@@ -14,7 +15,7 @@ const INITIAL_RECORDS = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home'); // 'home' or 'measure'
+  const [activeTab, setActiveTab] = useState('home'); // 'home', 'measure', 'benefits'
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
   const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
@@ -60,7 +61,7 @@ export default function App() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 3000);
+    }, 3200);
   };
 
   // Open Feed Drawer when a photo pin is clicked
@@ -181,17 +182,23 @@ export default function App() {
           </div>
         )}
 
-        {/* 3. Main Center Content Area with smooth scrolling overflow handling */}
+        {/* 3. Main Center Content Area: Home / Measure / Benefits */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          {activeTab === 'home' ? (
+          {activeTab === 'home' && (
             <HomeTab 
               selectedStationId={selectedStationId} 
               setSelectedStationId={setSelectedStationId}
               records={records}
               onSelectPhotoPin={handleSelectPhotoPin}
             />
-          ) : (
+          )}
+
+          {activeTab === 'measure' && (
             <MeasureTab onAddMeasurement={handleAddMeasurement} />
+          )}
+
+          {activeTab === 'benefits' && (
+            <BenefitsTab onShowToast={showNotification} />
           )}
         </div>
 
@@ -231,10 +238,10 @@ export default function App() {
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#1677ff', marginTop: '36px' }}>산책하기</span>
           </div>
 
-          {/* Tab 4: 혜택 */}
+          {/* Tab 4: 혜택 (Dongbaekjeon Wallet + Coupons + Partner Merchants) */}
           <button 
-            className="nav-tab-item"
-            onClick={() => showNotification("🎁 혜택 기능은 아직 준비 중입니다.")}
+            className={`nav-tab-item ${activeTab === 'benefits' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('benefits')}
           >
             <Gift size={22} />
             <span>혜택</span>
