@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User, Flame, Footprints, Camera, Heart, CheckCircle2, Mail, Edit3, Shield, Award, Calendar, LogOut, Download } from 'lucide-react';
+import { User, Flame, Footprints, Camera, Heart, CheckCircle2, Mail, Edit3, Shield, Award, Calendar, LogOut } from 'lucide-react';
 
-export default function MyPageTab({ onShowToast, onInstallPwa }) {
+export default function MyPageTab({ onShowToast }) {
   const [nickname, setNickname] = useState('부산하천지킴이_아린');
   const [isEditingNick, setIsEditingNick] = useState(false);
   const [newNickInput, setNewNickInput] = useState(nickname);
@@ -180,8 +180,7 @@ export default function MyPageTab({ onShowToast, onInstallPwa }) {
           border: '1px solid #e2e8f0',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px',
-          marginBottom: '12px'
+          gap: '6px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
@@ -208,29 +207,6 @@ export default function MyPageTab({ onShowToast, onInstallPwa }) {
             {stats.email}
           </div>
         </div>
-
-        {/* PWA Direct Download Button in Profile */}
-        <button
-          onClick={onInstallPwa}
-          style={{
-            width: '100%',
-            background: 'linear-gradient(135deg, #1677ff, #0958d9)',
-            color: 'white',
-            border: 'none',
-            padding: '12px',
-            borderRadius: '14px',
-            fontSize: '0.85rem',
-            fontWeight: 800,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 12px rgba(22, 119, 255, 0.3)'
-          }}
-        >
-          <Download size={18} /> 📱 리버로그 앱 다운로드 & 스마트폰 설치 (APK)
-        </button>
       </div>
 
       {/* 2. Cumulative Step Count & Walk Count Dashboard */}

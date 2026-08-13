@@ -4,7 +4,7 @@ import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
 import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, MapPin, Download } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, MapPin } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -34,10 +34,6 @@ export default function App() {
   const [dongbaekBalance, setDongbaekBalance] = useState(4000);
   const [dongbaekHistory, setDongbaekHistory] = useState(INITIAL_HISTORY);
 
-  // PWA WebAPK Install Prompt State
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showPwaInstallBanner, setShowPwaInstallBanner] = useState(true);
-
   // Real-time HTML5 GPS Location State
   const [userGpsLocation, setUserGpsLocation] = useState(null);
   const [isGpsLoading, setIsGpsLoading] = useState(false);
@@ -62,32 +58,6 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState(null);
 
   const currentStation = BUSAN_RIVER_STATIONS.find(s => s.id === selectedStationId) || BUSAN_RIVER_STATIONS[0];
-
-  // PWA WebAPK beforeinstallprompt event listener
-  useEffect(() => {
-    const handleBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowPwaInstallBanner(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-  }, []);
-
-  const handleInstallPwa = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === 'accepted') {
-        showNotification("🎉 리버로그 앱이 스마트폰 홈 화면에 설치되었습니다!");
-      }
-      setDeferredPrompt(null);
-      setShowPwaInstallBanner(false);
-    } else {
-      alert("📱 안드로이드 크롬 브라우저 상단 메뉴(⋮) ➔ '홈 화면에 추가' 또는 '앱 설치'를 누르시면 APK처럼 바탕화면에 설치됩니다!");
-    }
-  };
 
   // Fetch Real-Time HTML5 GPS Location
   const fetchRealtimeGps = () => {
@@ -339,7 +309,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 1. Top Header Bar with PWA App Download Button */}
+        {/* 1. Top Header Bar */}
         <header className="topbar">
           <div className="brand" onClick={() => setActiveTab('home')} style={{ cursor: 'pointer' }}>
             <span className="brand-name">리버로그</span>
@@ -354,90 +324,15 @@ export default function App() {
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {/* PWA Direct Install Button */}
-            <button
-              onClick={handleInstallPwa}
-              style={{
-                background: '#eff6ff',
-                color: '#1677ff',
-                border: '1px solid #bfdbfe',
-                padding: '6px 10px',
-                borderRadius: '12px',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-              title="앱 다운로드 & 안드로이드 홈 화면 설치"
-            >
-              <Download size={14} /> 앱 설치
-            </button>
-
-            <button 
-              className="icon-btn" 
-              type="button" 
-              aria-label="알림"
-              onClick={() => showNotification("🔔 실시간 시민 수질 사진 피드가 갱신되었습니다.")}
-            >
-              <Bell size={20} />
-            </button>
-          </div>
+          <button 
+            className="icon-btn" 
+            type="button" 
+            aria-label="알림"
+            onClick={() => showNotification("🔔 실시간 시민 수질 사진 피드가 갱신되었습니다.")}
+          >
+            <Bell size={20} />
+          </button>
         </header>
-
-        {/* PWA Floating Bottom App Install Prompt Banner for Android Chrome */}
-        {showPwaInstallBanner && (
-          <div style={{
-            background: 'linear-gradient(135deg, #0f172a, #1e293b)',
-            color: 'white',
-            padding: '10px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            borderBottom: '1px solid #334155',
-            zIndex: 115
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.1rem' }}>📱</span>
-              <span>스마트폰에 <b>리버로그 앱 다운로드</b> 받기</span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button
-                onClick={handleInstallPwa}
-                style={{
-                  background: '#1677ff',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '10px',
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  cursor: 'pointer'
-                }}
-              >
-                앱 다운로드/설치
-              </button>
-              <button
-                onClick={() => setShowPwaInstallBanner(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#94a3b8',
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  padding: '4px'
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* 2. Sub-header River Filter Tabs */}
         {activeTab === 'home' && (
@@ -479,7 +374,7 @@ export default function App() {
           )}
 
           {activeTab === 'mypage' && (
-            <MyPageTab onShowToast={showNotification} onInstallPwa={handleInstallPwa} />
+            <MyPageTab onShowToast={showNotification} />
           )}
         </div>
 
