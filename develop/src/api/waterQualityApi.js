@@ -7,11 +7,11 @@
 export const PUBLIC_API_KEY = "5Nt4H72FqfklJ0ffWhjIXyI3Nsf2qLRUPh08YcoXu3XXju2NpKcseIiLXQRr%2BvIkncQyEQIM6mMyj%2F%2BIc6CqEw%3D%3D";
 
 // 부산 주요 하천 관측소 매핑 (온천천: 1급수, 동천: 3급수, 괴정천: 3급수)
-// 괴정천 (하굿둑 지점): 부산 사하구 하단동 괴정천 수문/물길 한가운데 정밀 좌표 (35.0990, 128.9612)
+// 괴정천 (하단 지오빌1차 아파트 지점): 부산 사하구 하단동 하단지오빌1차 아파트 앞 정밀 좌표 (35.1018, 128.9622)
 export const BUSAN_RIVER_STATIONS = [
   { id: '2014A65', name: '온천천 (세병교 지점)', river: '온천천', defaultBod: 1.8, defaultDo: 9.2, defaultPh: 7.3, defaultTds: 135, temp: 18.2, lat: 35.1970, lng: 129.0835 },
   { id: '2014A70', name: '동천 (범일교 지점)', river: '동천', defaultBod: 3.5, defaultDo: 7.1, defaultPh: 6.8, defaultTds: 210, temp: 19.1, lat: 35.1432, lng: 129.0625 },
-  { id: '2014A85', name: '괴정천 (하굿둑 지점)', river: '괴정천', defaultBod: 4.2, defaultDo: 6.5, defaultPh: 6.6, defaultTds: 285, temp: 19.5, lat: 35.0990, lng: 128.9612 }
+  { id: '2014A85', name: '괴정천 (하단 지오빌1차 아파트 지점)', river: '괴정천', defaultBod: 4.2, defaultDo: 6.5, defaultPh: 6.6, defaultTds: 285, temp: 19.5, lat: 35.1018, lng: 128.9622 }
 ];
 
 export function getStationWaterData(stationId = '2014A65') {
