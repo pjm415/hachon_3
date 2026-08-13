@@ -3,11 +3,11 @@ import { Compass, Crosshair } from 'lucide-react';
 import { BUSAN_RIVER_STATIONS } from '../api/waterQualityApi';
 
 // 부산 주요 하천 정밀 GPS 좌표 매핑
-// 괴정천 (하구 지점): 사용자 캡처 수로 한가운데 괴정천 파란색 물길 정밀 좌표 (35.1064, 128.9648)
+// 괴정천 (하단도서관/강변대로 물길 지점): 사하구 하단도서관 및 강변대로 바로 옆 괴정천 넓은 파란색 하천 물길 한가운데 정밀 좌표 (35.1054, 128.9602)
 const STATION_COORDS = {
   '2014A65': { lat: 35.1970, lng: 129.0835, river: '온천천', station: '세병교 지점' },
   '2014A70': { lat: 35.1432, lng: 129.0625, river: '동천', station: '범일교 지점' },
-  '2014A85': { lat: 35.1064, lng: 128.9648, river: '괴정천', station: '하구 지점' }
+  '2014A85': { lat: 35.1054, lng: 128.9602, river: '괴정천', station: '강변대로·하단도서관 지점' }
 };
 
 export default function HomeTab({ selectedStationId, setSelectedStationId, records, onSelectPhotoPin }) {
@@ -39,7 +39,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
         });
         marker.setMap(map);
 
-        // Add Main Station InfoWindow (No apartment name, strictly river name '괴정천')
+        // Add Main Station InfoWindow
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:6px 12px;font-size:12px;font-weight:700;color:#1677ff;border-radius:8px;">📍 ${coords.river} ${coords.station}</div>`
         });
@@ -119,7 +119,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
       {/* Floating Target Location */}
       <button 
         className="floating-target" 
-        onClick={() => alert(`📍 내 위치: ${currentCoords.river} ${currentCoords.station} (괴정천 파란색 물길 수로)`)}
+        onClick={() => alert(`📍 내 위치: ${currentCoords.river} ${currentCoords.station} (부산 사하구 하단도서관/강변대로 앞 괴정천 파란색 물길)`)}
         title="내 위치 찾기"
       >
         <Crosshair size={24} />
