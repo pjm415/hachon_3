@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
-import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle, Info } from 'lucide-react';
+import { BUSAN_RIVER_STATIONS, getStationWaterData, fetchRealtimeWaterData } from '../api/waterQualityApi';
+import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle, Info, Wifi } from 'lucide-react';
 
 export default function MeasureTab({ onAddMeasurement }) {
   // 3 Sub-Tabs: 'public' (실시간 공공 측정) | 'citizen' (시민 키트 직접 측정) | 'results' (시민 측정 결과 모아보기)
@@ -8,8 +8,23 @@ export default function MeasureTab({ onAddMeasurement }) {
   
   // Public sub-tab state
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
-  const realtimeData = getStationWaterData(selectedStationId);
-  const { metrics, bodTrend24h, summaryText, gradeStyle } = realtimeData;
+  const [realtimeData, setRealtimeData] = useState(() => getStationWaterData(selectedStationId));
+  const [loadingApi, setLoadingApi] = useState(false);
+
+  // Trigger live API fetch using user's data.go.kr API Key whenever selectedStationId changes
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingApi(true);
+    fetchRealtimeWaterData(selectedStationId).then(data => {
+      if (isMounted) {
+        setRealtimeData(data);
+        setLoadingApi(false);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [selectedStationId]);
+
+  const { metrics, bodTrend24h, summaryText, gradeStyle, apiStatus } = realtimeData;
 
   // Citizen measurement 5-step flow state
   const [citizenStep, setCitizenStep] = useState('check_kit');
@@ -44,11 +59,11 @@ export default function MeasureTab({ onAddMeasurement }) {
       deviceType: '무인 자판기 1회용 발색 시약 키트',
       author: '최진아 (시민기자)',
       time: '35분 전',
-      bod: '2.8 ppm',
+      bod: '3.5 ppm',
       ph: '6.8',
-      doVal: '7.2 mg/L',
-      grade: '2급수 (보통)',
-      status: 'warning',
+      doVal: '7.1 mg/L',
+      grade: '3급수 (위험)',
+      status: 'danger',
       hash: '0x3c7e...12a4'
     },
     {
@@ -193,6 +208,14 @@ export default function MeasureTab({ onAddMeasurement }) {
       {/* ======================================================== */}
       {subTab === 'public' && (
         <div>
+          {/* Live Open API Connection Status Indicator */}
+          <div style={{ background: '#ffffff', padding: '8px 12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '0.72rem', fontWeight: 800, color: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Wifi size={14} color="#1677ff" /> {apiStatus || "📡 공공데이터포털 Open API 연동 완료"}
+            </span>
+            {loadingApi && <span style={{ color: '#f59e0b' }}>불러오는 중...</span>}
+          </div>
+
           {/* Station Selection */}
           <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
             {BUSAN_RIVER_STATIONS.map(st => (
@@ -239,7 +262,7 @@ export default function MeasureTab({ onAddMeasurement }) {
               <Droplet size={28} /> {metrics.grade.value}
             </div>
 
-            {/* Replaced '공공데이터포털 API 실시간 데이터 연동 완료' with User Requested Citizen One-Sentence Water Summary */}
+            {/* Citizen One-Sentence Summary replacing the old static text */}
             <div style={{
               fontSize: '0.82rem',
               background: 'rgba(255, 255, 255, 0.18)',
