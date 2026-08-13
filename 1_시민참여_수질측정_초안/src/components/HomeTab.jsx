@@ -13,48 +13,58 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
   const [selectedStationId, setSelectedStationId] = useState('2014A65'); // Default: 온천천
   const realtimeData = getStationWaterData(selectedStationId);
   const { metrics, bodTrend24h } = realtimeData;
-  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
 
-  // Kakao Map initialization & marker update per official React/SPA guide
+  // Kakao Official Guide implementation
   useEffect(() => {
     const coords = STATION_COORDS[selectedStationId] || STATION_COORDS['2014A65'];
 
-    const renderMap = () => {
-      if (!mapContainerRef.current) return;
-      if (!window.kakao || !window.kakao.maps) return;
+    const createMap = () => {
+      const container = mapRef.current || document.getElementById('map');
+      if (!container) return;
 
-      window.kakao.maps.load(() => {
-        if (!mapContainerRef.current) return;
-        const container = mapContainerRef.current;
-        container.innerHTML = ''; // clear
+      if (window.kakao && window.kakao.maps) {
+        // Clear previous map canvas
+        container.innerHTML = '';
 
+        // Kakao Official Guide Code
         const options = {
           center: new window.kakao.maps.LatLng(coords.lat, coords.lng),
           level: 4
         };
 
         const map = new window.kakao.maps.Map(container, options);
-        const markerPosition = new window.kakao.maps.LatLng(coords.lat, coords.lng);
 
+        // Add Marker
+        const markerPosition = new window.kakao.maps.LatLng(coords.lat, coords.lng);
         const marker = new window.kakao.maps.Marker({
           position: markerPosition
         });
         marker.setMap(map);
 
+        // Add InfoWindow
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:4px 8px;font-size:12px;font-weight:bold;color:#0284c7;">📍 ${coords.name}</div>`
         });
         infowindow.open(map, marker);
-      });
+      }
     };
 
     if (window.kakao && window.kakao.maps) {
-      renderMap();
+      if (window.kakao.maps.load) {
+        window.kakao.maps.load(createMap);
+      } else {
+        createMap();
+      }
     } else {
       const timer = setInterval(() => {
         if (window.kakao && window.kakao.maps) {
           clearInterval(timer);
-          renderMap();
+          if (window.kakao.maps.load) {
+            window.kakao.maps.load(createMap);
+          } else {
+            createMap();
+          }
         }
       }, 300);
       return () => clearInterval(timer);
@@ -87,17 +97,17 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
         ))}
       </div>
 
-      {/* Real Kakao Map Canvas Container */}
+      {/* Real Kakao Map Canvas Container (Exact id="map" per Kakao Official Guide) */}
       <div style={{
         position: 'relative',
-        height: '190px',
+        height: '200px',
         borderRadius: '16px',
         overflow: 'hidden',
         border: '1px solid var(--gray-200)',
         marginBottom: '14px',
         background: '#f1f5f9'
       }}>
-        <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }}></div>
+        <div id="map" ref={mapRef} style={{ width: '100%', height: '100%' }}></div>
       </div>
 
       {/* 1. Main River Status Banner */}
