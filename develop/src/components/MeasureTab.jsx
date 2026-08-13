@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
-import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle, Info, Wifi } from 'lucide-react';
+import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle, Info, Wifi, SwitchCamera, AlertCircle } from 'lucide-react';
 
 export default function MeasureTab({ onAddMeasurement }) {
   // 3 Sub-Tabs: 'public' (실시간 공공 측정) | 'citizen' (시민 키트 직접 측정) | 'results' (시민 측정 결과 모아보기)
@@ -8,8 +8,6 @@ export default function MeasureTab({ onAddMeasurement }) {
   
   // Public sub-tab state
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
-
-  // Direct synchronous evaluation per selected station ID to eliminate async state mismatch!
   const realtimeData = getStationWaterData(selectedStationId);
   const { metrics, bodTrend24h, summaryText, gradeStyle, apiStatus } = realtimeData;
 
@@ -17,6 +15,13 @@ export default function MeasureTab({ onAddMeasurement }) {
   const [citizenStep, setCitizenStep] = useState('check_kit');
   const [selectedShop, setSelectedShop] = useState(null);
   const [scanProgress, setScanProgress] = useState(0);
+
+  // Real WebRTC Camera Hardware States
+  const videoRef = useRef(null);
+  const [stream, setStream] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [facingMode, setFacingMode] = useState('environment');
 
   // Filter for citizen results feed
   const [resultFilter, setResultFilter] = useState('all');
@@ -76,6 +81,72 @@ export default function MeasureTab({ onAddMeasurement }) {
     { id: 2, name: '동천 마을 상회', distance: '340m', location: '범일교 앞', stock: '여유 8개' },
     { id: 3, name: '괴정천 하구 동백가게', distance: '450m', location: '하굿둑 입구', stock: '여유 12개' },
   ];
+
+  // Start Real Camera Stream
+  const startCamera = async (currentFacingMode = facingMode) => {
+    stopCamera();
+    setCameraError(null);
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("이 브라우저는 카메라 API를 지원하지 않습니다.");
+      }
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: currentFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      console.warn("Real Camera Permission/Hardware Error:", err);
+      setCameraError(err.message || "카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.");
+    }
+  };
+
+  // Stop Camera Stream
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
+  // Switch Front/Back Camera
+  const toggleCameraFacing = () => {
+    const nextFacing = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(nextFacing);
+    startCamera(nextFacing);
+  };
+
+  // Take Snapshot Frame from Video
+  const takeCameraSnapshot = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      setCapturedPhoto(dataUrl);
+      stopCamera();
+      
+      // Move to AI Analysis step
+      setCitizenStep('ai_analysis');
+      setScanProgress(0);
+    }
+  };
+
+  // Handle step changes & cleanup camera
+  useEffect(() => {
+    if (citizenStep === 'camera_scan') {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => stopCamera();
+  }, [citizenStep]);
 
   // AI Scan progress animation
   useEffect(() => {
@@ -191,7 +262,7 @@ export default function MeasureTab({ onAddMeasurement }) {
       </div>
 
       {/* ======================================================== */}
-      {/* SUB-TAB 1: 실시간 공공 측정 정보 (수질 위험도 색상 + 시민 1문장 요약) */}
+      {/* SUB-TAB 1: 실시간 공공 측정 정보 */}
       {/* ======================================================== */}
       {subTab === 'public' && (
         <div>
@@ -225,7 +296,7 @@ export default function MeasureTab({ onAddMeasurement }) {
             ))}
           </div>
 
-          {/* Integrated Grade Card with Dynamic Risk Gradient Color & Citizen One-Sentence Summary */}
+          {/* Integrated Grade Card */}
           <div style={{
             background: gradeStyle.bg,
             color: 'white',
@@ -319,7 +390,7 @@ export default function MeasureTab({ onAddMeasurement }) {
       )}
 
       {/* ======================================================== */}
-      {/* SUB-TAB 2: 시민 키트 측정 (Step Flow) */}
+      {/* SUB-TAB 2: 시민 키트 측정 (Real WebRTC Camera Integration) */}
       {/* ======================================================== */}
       {subTab === 'citizen' && (
         <div>
@@ -345,7 +416,7 @@ export default function MeasureTab({ onAddMeasurement }) {
                   시민 수질 측정 시작
                 </h3>
                 <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px', lineHeight: 1.5 }}>
-                  측정 키트를 보유하고 계신가요?<br />키트가 없으시면 가까운 대여 상점에서 QR로 무료 대여할 수 있습니다.
+                  측정 키트를 보유하고 계신가요?<br />버튼을 누르면 실제 카메라(스마트폰/컴퓨터)가 켜집니다.
                 </p>
 
                 <div style={{ display: 'grid', gap: '10px' }}>
@@ -443,31 +514,84 @@ export default function MeasureTab({ onAddMeasurement }) {
             </div>
           )}
 
-          {/* Step 4: Camera Scan */}
+          {/* Step 4: Real WebRTC HTML5 Camera Hardware Stream */}
           {citizenStep === 'camera_scan' && (
-            <div style={{ background: '#000000', borderRadius: '24px', padding: '20px', color: 'white', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#10b981', marginBottom: '10px' }}>
-                📷 수질 측정 시약 키트 촬영 중
-              </div>
-              <div style={{ height: '220px', border: '2px dashed #10b981', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(16, 185, 129, 0.1)', marginBottom: '16px' }}>
-                <div>
-                  <Camera size={48} color="#10b981" />
-                  <div style={{ fontSize: '0.8rem', marginTop: '8px', color: '#10b981' }}>
-                    시약 발색 부위를 프레임 안 중앙에 맞추세요
-                  </div>
-                </div>
+            <div style={{ background: '#000000', borderRadius: '24px', padding: '16px', color: 'white', textAlign: 'center', position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Camera size={18} /> 실시간 하드웨어 카메라 작동 중
+                </span>
+                <button
+                  onClick={toggleCameraFacing}
+                  style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <SwitchCamera size={14} /> 전/후면 전환
+                </button>
               </div>
 
-              <button 
-                className="btn-submit"
-                onClick={() => {
-                  setCitizenStep('ai_analysis');
-                  setScanProgress(0);
-                }}
-                style={{ margin: 0 }}
-              >
-                📸 찰칵! 촬영하고 AI 판독 시작
-              </button>
+              {cameraError ? (
+                <div style={{ padding: '30px 20px', background: '#1e293b', borderRadius: '18px', marginBottom: '16px' }}>
+                  <AlertCircle size={40} color="#ef4444" style={{ margin: '0 auto 10px' }} />
+                  <p style={{ fontSize: '0.85rem', color: '#f87171', fontWeight: 700, marginBottom: '14px' }}>
+                    {cameraError}
+                  </p>
+
+                  <label style={{ display: 'inline-block', background: '#1677ff', color: 'white', padding: '12px 20px', borderRadius: '14px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>
+                    📁 직접 갤러리/사진 파일 선택
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      capture="environment"
+                      style={{ display: 'none' }} 
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            setCapturedPhoto(event.target.result);
+                            setCitizenStep('ai_analysis');
+                            setScanProgress(0);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div style={{ position: 'relative', width: '100%', height: '260px', borderRadius: '18px', overflow: 'hidden', background: '#111827', marginBottom: '16px' }}>
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                  {/* Camera Aim Target Overlay Box */}
+                  <div style={{ position: 'absolute', inset: '30px', border: '2px dashed #10b981', borderRadius: '16px', pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ background: 'rgba(0,0,0,0.65)', color: '#10b981', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 800 }}>
+                      시약 발색 영역을 프레임 중앙에 위치시키세요
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  className="btn-submit"
+                  onClick={takeCameraSnapshot}
+                  style={{ flex: 1, margin: 0, background: 'linear-gradient(135deg, #10b981, #059669)', fontSize: '0.95rem', padding: '14px' }}
+                >
+                  📸 찰칵! 샷 촬영하고 AI 분석 시작
+                </button>
+
+                <button 
+                  onClick={() => setCitizenStep('check_kit')}
+                  style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '14px', borderRadius: '16px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
+                >
+                  취소
+                </button>
+              </div>
             </div>
           )}
 
@@ -476,10 +600,15 @@ export default function MeasureTab({ onAddMeasurement }) {
             <div style={{ background: 'white', padding: '30px 20px', borderRadius: '24px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
               <Sparkles size={48} color="#1677ff" style={{ margin: '0 auto 12px' }} />
               <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px' }}>
-                AI 시약 색상 분석 진행 중...
+                AI 실시간 촬영 사진 정밀 분석 중...
               </h3>
+
+              {capturedPhoto && (
+                <img src={capturedPhoto} alt="촬영된 수질 사진" style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '12px', margin: '10px auto 16px', border: '2px solid #1677ff' }} />
+              )}
+
               <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px' }}>
-                스마트폰 카메라로 촬영된 시약 발색 색상을 AI가 정밀 판독합니다 ({scanProgress}%)
+                실제 촬영한 시약 발색 색상을 AI가 정밀 분석하고 있습니다 ({scanProgress}%)
               </p>
 
               <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
@@ -500,10 +629,10 @@ export default function MeasureTab({ onAddMeasurement }) {
               </span>
 
               <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '4px', color: '#0f172a' }}>
-                측정 결과 저장 성공
+                실제 카메라 측정 결과 저장 성공
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px' }}>
-                시민 판독 결과가 하천 데이터베이스 및 [결과 모아보기] 탭에 즉시 등록되었습니다.
+                직접 촬영한 수질 측정 사진과 결과가 하천 데이터베이스에 등록되었습니다.
               </p>
 
               <div style={{ background: 'white', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'left', marginBottom: '16px', fontSize: '0.82rem' }}>

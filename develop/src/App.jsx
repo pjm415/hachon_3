@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import HomeTab from './components/HomeTab';
 import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
 import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2 } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -23,6 +23,12 @@ export default function App() {
   const [walkSteps, setWalkSteps] = useState(0);
   const [records, setRecords] = useState(INITIAL_RECORDS);
 
+  // Real WebRTC Camera for Walking Screen
+  const [showRealCameraModal, setShowRealCameraModal] = useState(false);
+  const walkingVideoRef = useRef(null);
+  const [walkingCameraStream, setWalkingCameraStream] = useState(null);
+  const [walkingCameraError, setWalkingCameraError] = useState(null);
+
   // Selected Photo Pin Feed Drawer State
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showFeedDrawer, setShowFeedDrawer] = useState(false);
@@ -36,6 +42,51 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState(null);
 
   const currentStation = BUSAN_RIVER_STATIONS.find(s => s.id === selectedStationId) || BUSAN_RIVER_STATIONS[0];
+
+  // Start Real Camera Stream for Walking Screen
+  const startWalkingCamera = async () => {
+    setShowRealCameraModal(true);
+    setWalkingCameraError(null);
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("카메라 API를 지원하지 않는 브라우저입니다.");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      setWalkingCameraStream(stream);
+      if (walkingVideoRef.current) {
+        walkingVideoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.warn("Walking Camera Hardware/Permission Error:", err);
+      setWalkingCameraError("카메라 접근 권한이 필요합니다. 갤러리 파일 선택을 이용해 주세요.");
+    }
+  };
+
+  const stopWalkingCamera = () => {
+    if (walkingCameraStream) {
+      walkingCameraStream.getTracks().forEach(track => track.stop());
+      setWalkingCameraStream(null);
+    }
+    setShowRealCameraModal(false);
+  };
+
+  const captureWalkingPhoto = () => {
+    if (walkingVideoRef.current) {
+      const video = walkingVideoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      setUploadPhoto(dataUrl);
+      stopWalkingCamera();
+      setShowUploadModal(true);
+    }
+  };
 
   // Live Timer & Step Counter (Starting cleanly from 0)
   useEffect(() => {
@@ -227,7 +278,7 @@ export default function App() {
             <span>수질 측정</span>
           </button>
 
-          {/* Tab 3: 산책하기 (0보부터 시작!) */}
+          {/* Tab 3: 산책하기 */}
           <div className="nav-center-circle-wrapper">
             <button 
               className="center-walk-big-btn"
@@ -280,9 +331,10 @@ export default function App() {
             </div>
 
             <div className="walking-bottom-actions">
+              {/* Clicking Upload triggers Real WebRTC Camera directly */}
               <button 
                 className="walking-action-btn"
-                onClick={() => setShowUploadModal(true)}
+                onClick={startWalkingCamera}
               >
                 <div className="walking-action-circle">
                   <Camera size={22} />
@@ -301,6 +353,84 @@ export default function App() {
                   <Pause size={22} />
                 </div>
                 <span>산책 완료</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Real Live Hardware Camera Modal for Walking Screen */}
+        {showRealCameraModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 350, display: 'flex', flexDirection: 'column', padding: '20px', color: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Camera size={20} /> 실시간 하천 촬영 카메라
+              </span>
+              <button 
+                onClick={stopWalkingCamera}
+                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {walkingCameraError ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+                <AlertCircle size={48} color="#ef4444" style={{ marginBottom: '12px' }} />
+                <p style={{ fontSize: '0.9rem', color: '#f87171', fontWeight: 700, marginBottom: '16px' }}>
+                  {walkingCameraError}
+                </p>
+
+                <label style={{ background: '#1677ff', color: 'white', padding: '14px 24px', borderRadius: '16px', fontWeight: 800, cursor: 'pointer' }}>
+                  📁 사진 파일 직접 선택하기
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="environment"
+                    style={{ display: 'none' }} 
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setUploadPhoto(event.target.result);
+                          stopWalkingCamera();
+                          setShowUploadModal(true);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            ) : (
+              <div style={{ flex: 1, position: 'relative', borderRadius: '24px', overflow: 'hidden', background: '#111827', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <video 
+                  ref={walkingVideoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+                <div style={{ position: 'absolute', bottom: '20px', background: 'rgba(0,0,0,0.6)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.78rem', color: 'white', fontWeight: 800 }}>
+                  📍 [{currentStation.river}] 산책 현장 촬영중
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                className="btn-submit"
+                onClick={captureWalkingPhoto}
+                style={{ flex: 1, margin: 0, padding: '16px', background: 'linear-gradient(135deg, #10b981, #059669)', fontSize: '1rem' }}
+              >
+                📸 찰칵! 샷 촬영하고 지도에 등록
+              </button>
+
+              <button 
+                onClick={stopWalkingCamera}
+                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '16px 20px', borderRadius: '16px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                취소
               </button>
             </div>
           </div>
@@ -361,7 +491,7 @@ export default function App() {
                 className="btn-submit"
                 onClick={() => {
                   setShowFeedDrawer(false);
-                  setShowUploadModal(true);
+                  startWalkingCamera();
                 }}
               >
                 📷 나도 현장 사진 올리고 동백전 받기
@@ -440,25 +570,16 @@ export default function App() {
 
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
-                  사진 선택 (지도 위에 표시됩니다)
+                  촬영된 현장 사진 (지도 위에 표시됩니다)
                 </label>
                 <div style={{ position: 'relative', width: '100%', height: '140px', borderRadius: '14px', overflow: 'hidden', background: '#f1f5f9', border: '2px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img src={uploadPhoto} alt="미리보기" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <button
                     type="button"
-                    onClick={() => {
-                      const samplePhotos = [
-                        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80',
-                        'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=600&q=80',
-                        'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=600&q=80',
-                        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80'
-                      ];
-                      const nextIndex = (samplePhotos.indexOf(uploadPhoto) + 1) % samplePhotos.length;
-                      setUploadPhoto(samplePhotos[nextIndex]);
-                    }}
-                    style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    onClick={startWalkingCamera}
+                    style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.75)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
-                    <ImageIcon size={14} /> 다른 사진 선택
+                    <Camera size={14} /> 다시 촬영하기
                   </button>
                 </div>
               </div>
