@@ -6,13 +6,13 @@ export default function MyPageTab({ onShowToast }) {
   const [isEditingNick, setIsEditingNick] = useState(false);
   const [newNickInput, setNewNickInput] = useState(nickname);
 
-  // User Stats (누적 걸음수, 산책 횟수)
+  // User Stats
   const [stats, setStats] = useState({
     totalSteps: 12840,
     walkCount: 14,
     measureCount: 8,
     attendanceStreak: 7,
-    email: 'pjm415@hacheon.busan.kr'
+    email: 'team3@hacheon.busan.kr'
   });
 
   // Consecutive Attendance Status (월~일)
@@ -26,7 +26,7 @@ export default function MyPageTab({ onShowToast }) {
     { day: '일', done: true, label: '오늘', isToday: true },
   ];
 
-  // My Uploaded Photos (내 사진 모아보기)
+  // My Uploaded Photos
   const [myPhotos, setMyPhotos] = useState([
     {
       id: 201,
@@ -89,43 +89,82 @@ export default function MyPageTab({ onShowToast }) {
       
       {/* 1. Profile & Account Info Card */}
       <div style={{ background: 'white', padding: '20px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg, #1677ff, #0958d9)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.4rem', boxShadow: '0 4px 12px rgba(22, 119, 255, 0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+          <div style={{ width: '58px', height: '58px', borderRadius: '50%', background: 'linear-gradient(135deg, #1677ff, #0958d9)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.4rem', boxShadow: '0 4px 12px rgba(22, 119, 255, 0.3)', flexShrink: 0 }}>
             💧
           </div>
 
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             {isEditingNick ? (
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
                 <input
                   type="text"
                   value={newNickInput}
                   onChange={e => setNewNickInput(e.target.value)}
-                  style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1.5px solid #1677ff', fontSize: '0.9rem', fontWeight: 800 }}
+                  placeholder="닉네임 입력"
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: '8px 10px',
+                    borderRadius: '10px',
+                    border: '1.5px solid #1677ff',
+                    fontSize: '0.85rem',
+                    fontWeight: 800
+                  }}
                 />
                 <button
                   onClick={handleSaveNickname}
-                  style={{ padding: '6px 12px', background: '#1677ff', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
+                  style={{
+                    padding: '8px 12px',
+                    background: '#1677ff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}
                 >
-                  저장
+                  확인
+                </button>
+                <button
+                  onClick={() => setIsEditingNick(false)}
+                  style={{
+                    padding: '8px 10px',
+                    background: '#f1f5f9',
+                    color: '#64748b',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}
+                >
+                  취소
                 </button>
               </div>
             ) : (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>{nickname}</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {nickname}
+                  </h3>
                   <button 
                     onClick={() => {
                       setNewNickInput(nickname);
                       setIsEditingNick(true);
                     }}
-                    style={{ background: 'none', border: 'none', color: '#1677ff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    style={{ background: 'none', border: 'none', color: '#1677ff', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px', flexShrink: 0 }}
                     title="닉네임 수정"
                   >
                     <Edit3 size={16} />
                   </button>
                 </div>
-                <span style={{ fontSize: '0.72rem', background: '#eff6ff', color: '#1677ff', padding: '2px 8px', borderRadius: '10px', fontWeight: 800, display: 'inline-block', marginTop: '2px' }}>
+                <span style={{ fontSize: '0.72rem', background: '#eff6ff', color: '#1677ff', padding: '3px 8px', borderRadius: '10px', fontWeight: 800, display: 'inline-block', marginTop: '3px' }}>
                   🏅 부산 하천 1등급 시민 지킴이
                 </span>
               </div>
@@ -133,12 +172,40 @@ export default function MyPageTab({ onShowToast }) {
           </div>
         </div>
 
-        {/* Logged-in Account Info */}
-        <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '14px', border: '1px solid #e2e8f0', fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Mail size={14} color="#1677ff" /> 로그인 계정: <b style={{ color: '#0f172a' }}>{stats.email}</b>
-          </span>
-          <span style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 800 }}>카카오 소셜 인증</span>
+        {/* Logged-in Account Info Box */}
+        <div style={{
+          background: '#f8fafc',
+          padding: '14px 16px',
+          borderRadius: '16px',
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
+              <Mail size={14} color="#1677ff" /> 로그인 계정
+            </span>
+            <span style={{
+              fontSize: '0.72rem',
+              background: '#fee500',
+              color: '#3c1e1e',
+              padding: '3px 10px',
+              borderRadius: '12px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+            }}>
+              💬 카카오 소셜 인증
+            </span>
+          </div>
+
+          <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
+            {stats.email}
+          </div>
         </div>
       </div>
 
