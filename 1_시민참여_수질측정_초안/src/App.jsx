@@ -181,17 +181,19 @@ export default function App() {
           </div>
         )}
 
-        {/* 3. Main Center Content Area: Home (Map) OR Measure Tab */}
-        {activeTab === 'home' ? (
-          <HomeTab 
-            selectedStationId={selectedStationId} 
-            setSelectedStationId={setSelectedStationId}
-            records={records}
-            onSelectPhotoPin={handleSelectPhotoPin}
-          />
-        ) : (
-          <MeasureTab onAddMeasurement={handleAddMeasurement} />
-        )}
+        {/* 3. Main Center Content Area with smooth scrolling overflow handling */}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          {activeTab === 'home' ? (
+            <HomeTab 
+              selectedStationId={selectedStationId} 
+              setSelectedStationId={setSelectedStationId}
+              records={records}
+              onSelectPhotoPin={handleSelectPhotoPin}
+            />
+          ) : (
+            <MeasureTab onAddMeasurement={handleAddMeasurement} />
+          )}
+        </div>
 
         {/* 4. Bottom Navigation Bar matching user screenshot */}
         <nav className="bottom-nav-clean">
@@ -204,7 +206,7 @@ export default function App() {
             <span>홈</span>
           </button>
 
-          {/* Tab 2: 수질 측정 (Sub-tabs for Public & Citizen Measurement) */}
+          {/* Tab 2: 수질 측정 */}
           <button 
             className={`nav-tab-item ${activeTab === 'measure' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('measure')}
@@ -213,7 +215,7 @@ export default function App() {
             <span>수질 측정</span>
           </button>
 
-          {/* Tab 3: 산책하기 (Center BIG Floating Circle Button) */}
+          {/* Tab 3: 산책하기 */}
           <div className="nav-center-circle-wrapper">
             <button 
               className="center-walk-big-btn"

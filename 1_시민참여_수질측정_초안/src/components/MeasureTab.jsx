@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
-import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, Store, ArrowRight, RefreshCw, BarChart2, TestTube, FileText, CheckCircle, Database } from 'lucide-react';
+import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle } from 'lucide-react';
 
 export default function MeasureTab({ onAddMeasurement }) {
-  // Two main Sub-Tabs: 'public' (실시간 공공 측정 정보) vs 'citizen' (시민 직접 키트 측정)
-  const [subTab, setSubTab] = useState('public');
+  // 3 Sub-Tabs: 'public' (실시간 공공 측정) | 'citizen' (시민 키트 직접 측정) | 'results' (시민 측정 결과 모아보기)
+  const [subTab, setSubTab] = useState('citizen');
   
   // Public sub-tab state
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
@@ -121,48 +121,70 @@ export default function MeasureTab({ onAddMeasurement }) {
     : citizenResults.filter(r => r.riverId === resultFilter);
 
   return (
-    <div style={{ padding: '16px 16px 90px', background: '#f8fafc', minHeight: '100%' }}>
-      {/* 2 Sub-Tabs Header Navigation */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: '#e2e8f0', padding: '4px', borderRadius: '14px', marginBottom: '16px' }}>
+    <div style={{ padding: '16px 16px 140px', background: '#f8fafc', minHeight: '100%', overflowY: 'auto' }}>
+      {/* 3 Sub-Tabs Header Navigation */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr 1.2fr', gap: '4px', background: '#e2e8f0', padding: '4px', borderRadius: '14px', marginBottom: '16px' }}>
         <button
           onClick={() => setSubTab('public')}
           style={{
-            padding: '10px',
+            padding: '9px 4px',
             borderRadius: '10px',
             border: 'none',
             background: subTab === 'public' ? '#ffffff' : 'transparent',
             color: subTab === 'public' ? '#1677ff' : '#64748b',
             fontWeight: 800,
-            fontSize: '0.85rem',
+            fontSize: '0.75rem',
             cursor: 'pointer',
             boxShadow: subTab === 'public' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px'
+            gap: '4px'
           }}
         >
-          <BarChart2 size={16} /> 실시간 공공 측정
+          <BarChart2 size={14} /> 공공 측정
         </button>
+
         <button
           onClick={() => setSubTab('citizen')}
           style={{
-            padding: '10px',
+            padding: '9px 4px',
             borderRadius: '10px',
             border: 'none',
             background: subTab === 'citizen' ? '#ffffff' : 'transparent',
             color: subTab === 'citizen' ? '#1677ff' : '#64748b',
             fontWeight: 800,
-            fontSize: '0.85rem',
+            fontSize: '0.75rem',
             cursor: 'pointer',
             boxShadow: subTab === 'citizen' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px'
+            gap: '4px'
           }}
         >
-          <TestTube size={16} /> 시민 키트 측정
+          <TestTube size={14} /> 키트 측정
+        </button>
+
+        <button
+          onClick={() => setSubTab('results')}
+          style={{
+            padding: '9px 4px',
+            borderRadius: '10px',
+            border: 'none',
+            background: subTab === 'results' ? '#1677ff' : 'transparent',
+            color: subTab === 'results' ? '#ffffff' : '#64748b',
+            fontWeight: 800,
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+            boxShadow: subTab === 'results' ? '0 2px 8px rgba(22,119,255,0.2)' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px'
+          }}
+        >
+          <Database size={14} /> 결과 모아보기
         </button>
       </div>
 
@@ -272,7 +294,7 @@ export default function MeasureTab({ onAddMeasurement }) {
       )}
 
       {/* ======================================================== */}
-      {/* SUB-TAB 2: 시민 키트 측정 (Step Flow + 시민 측정 결과 모아보기) */}
+      {/* SUB-TAB 2: 시민 키트 측정 (Step Flow) */}
       {/* ======================================================== */}
       {subTab === 'citizen' && (
         <div>
@@ -290,7 +312,7 @@ export default function MeasureTab({ onAddMeasurement }) {
           {/* Step 1: Check Kit */}
           {citizenStep === 'check_kit' && (
             <div>
-              <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '20px', textAlign: 'center' }}>
+              <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '16px', textAlign: 'center' }}>
                 <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#eff6ff', color: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
                   <TestTube size={32} />
                 </div>
@@ -316,85 +338,14 @@ export default function MeasureTab({ onAddMeasurement }) {
                   >
                     🏪 키트 없음 (대여처 상점 목록 보기)
                   </button>
-                </div>
-              </div>
 
-              {/* NEW SECTION: 시민 측정 결과 모아보기 (Collect & View Citizen Measurements) */}
-              <div style={{ background: 'white', padding: '18px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Database size={18} color="#1677ff" /> 시민 측정 결과 모아보기 ({citizenResults.length}건)
-                  </h3>
-                </div>
-
-                {/* Filter Pills */}
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-                  <button
-                    onClick={() => setResultFilter('all')}
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '12px',
-                      border: 'none',
-                      background: resultFilter === 'all' ? '#1677ff' : '#f1f5f9',
-                      color: resultFilter === 'all' ? '#ffffff' : '#64748b',
-                      fontSize: '0.72rem',
-                      fontWeight: 800,
-                      cursor: 'pointer'
-                    }}
+                  <button 
+                    onClick={() => setSubTab('results')}
+                    style={{ width: '100%', padding: '14px', borderRadius: '16px', border: '1.5px solid #10b981', background: '#ecfdf5', color: '#065f46', fontWeight: 800, fontSize: '0.92rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    전체
+                    📊 시민 측정 결과 모아보기 탭으로 이동 ({citizenResults.length}건)
                   </button>
-                  {BUSAN_RIVER_STATIONS.map(st => (
-                    <button
-                      key={st.id}
-                      onClick={() => setResultFilter(st.id)}
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '12px',
-                        border: 'none',
-                        background: resultFilter === st.id ? '#1677ff' : '#f1f5f9',
-                        color: resultFilter === st.id ? '#ffffff' : '#64748b',
-                        fontSize: '0.72rem',
-                        fontWeight: 800,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {st.river}
-                    </button>
-                  ))}
                 </div>
-
-                {/* Citizen Direct Measurement Result List Cards */}
-                {filteredResults.map((item) => (
-                  <div key={item.id} style={{ background: '#f8fafc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                      <div>
-                        <span style={{ fontSize: '0.68rem', background: '#eff6ff', color: '#1677ff', padding: '2px 7px', borderRadius: '6px', fontWeight: 800, display: 'inline-block', marginBottom: '4px' }}>
-                          🧪 {item.deviceType}
-                        </span>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>
-                          📍 [{item.river}] {item.location}
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '0.72rem', background: item.status === 'good' ? '#d1fae5' : '#fef2f2', color: item.status === 'good' ? '#065f46' : '#991b1b', padding: '3px 8px', borderRadius: '10px', fontWeight: 800 }}>
-                        {item.grade}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', margin: '8px 0', background: 'white', padding: '8px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.72rem', textAlign: 'center' }}>
-                      <div><span style={{ color: '#64748b' }}>BOD:</span> <b>{item.bod}</b></div>
-                      <div><span style={{ color: '#64748b' }}>pH:</span> <b>{item.ph}</b></div>
-                      <div><span style={{ color: '#64748b' }}>DO:</span> <b>{item.doVal}</b></div>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', color: '#64748b', marginTop: '4px' }}>
-                      <span>측정자: <b>{item.author}</b> • {item.time}</span>
-                      <span style={{ color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <CheckCircle size={12} /> 동백전 +1,000원 적립
-                      </span>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           )}
@@ -527,7 +478,7 @@ export default function MeasureTab({ onAddMeasurement }) {
                 측정 결과 저장 성공
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px' }}>
-                시민 판독 결과가 하천 데이터베이스 및 아래 모아보기에 즉시 등록되었습니다.
+                시민 판독 결과가 하천 데이터베이스 및 [결과 모아보기] 탭에 즉시 등록되었습니다.
               </p>
 
               <div style={{ background: 'white', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'left', marginBottom: '16px', fontSize: '0.82rem' }}>
@@ -538,13 +489,95 @@ export default function MeasureTab({ onAddMeasurement }) {
 
               <button 
                 className="btn-submit"
-                onClick={() => setCitizenStep('check_kit')}
+                onClick={() => setSubTab('results')}
                 style={{ margin: 0 }}
               >
-                <RefreshCw size={16} /> 다시 측정하기 / 결과 모아보기
+                <Database size={16} /> 결과 모아보기 탭으로 이동
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* SUB-TAB 3: 시민 측정 결과 모아보기 (Dedicated Sub-Tab view) */}
+      {/* ======================================================== */}
+      {subTab === 'results' && (
+        <div style={{ background: 'white', padding: '18px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Database size={20} color="#1677ff" /> 시민 측정 결과 모아보기 ({filteredResults.length}건)
+            </h3>
+          </div>
+
+          {/* River Filter Pills */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+            <button
+              onClick={() => setResultFilter('all')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '14px',
+                border: 'none',
+                background: resultFilter === 'all' ? '#1677ff' : '#f1f5f9',
+                color: resultFilter === 'all' ? '#ffffff' : '#64748b',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              전체
+            </button>
+            {BUSAN_RIVER_STATIONS.map(st => (
+              <button
+                key={st.id}
+                onClick={() => setResultFilter(st.id)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '14px',
+                  border: 'none',
+                  background: resultFilter === st.id ? '#1677ff' : '#f1f5f9',
+                  color: resultFilter === st.id ? '#ffffff' : '#64748b',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                {st.river}
+              </button>
+            ))}
+          </div>
+
+          {/* Citizen Measurement Result List Cards */}
+          {filteredResults.map((item) => (
+            <div key={item.id} style={{ background: '#f8fafc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                <div>
+                  <span style={{ fontSize: '0.68rem', background: '#eff6ff', color: '#1677ff', padding: '3px 8px', borderRadius: '6px', fontWeight: 800, display: 'inline-block', marginBottom: '4px' }}>
+                    🧪 {item.deviceType}
+                  </span>
+                  <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+                    📍 [{item.river}] {item.location}
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.75rem', background: item.status === 'good' ? '#d1fae5' : '#fef2f2', color: item.status === 'good' ? '#065f46' : '#991b1b', padding: '4px 10px', borderRadius: '12px', fontWeight: 800 }}>
+                  {item.grade}
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', margin: '10px 0', background: 'white', padding: '10px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '0.78rem', textAlign: 'center' }}>
+                <div><span style={{ color: '#64748b' }}>BOD:</span> <b>{item.bod}</b></div>
+                <div><span style={{ color: '#64748b' }}>pH:</span> <b>{item.ph}</b></div>
+                <div><span style={{ color: '#64748b' }}>DO:</span> <b>{item.doVal}</b></div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#64748b', marginTop: '6px' }}>
+                <span>측정자: <b>{item.author}</b> • {item.time}</span>
+                <span style={{ color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <CheckCircle size={13} /> 동백전 +1,000원 적립
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
