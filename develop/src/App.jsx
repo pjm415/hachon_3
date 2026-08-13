@@ -4,7 +4,7 @@ import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
 import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, Activity } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -21,6 +21,7 @@ export default function App() {
   const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
   const [walkSteps, setWalkSteps] = useState(0);
+  const [motionSensorActive, setMotionSensorActive] = useState(false);
   const [records, setRecords] = useState(INITIAL_RECORDS);
 
   // Real WebRTC Camera for Walking Screen
@@ -88,19 +89,74 @@ export default function App() {
     }
   };
 
-  // Live Timer & Step Counter (Starting cleanly from 0)
+  // 1. Real Device Physical Motion Sensor Pedometer Algorithm (DeviceMotionEvent)
+  useEffect(() => {
+    if (!isWalking) {
+      setMotionSensorActive(false);
+      return;
+    }
+
+    let lastStepTime = 0;
+    const threshold = 11.2; // Physical acceleration threshold for human walking (m/s²)
+    let sensorTriggered = false;
+
+    const handleMotion = (event) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+
+      const x = acc.x || 0;
+      const y = acc.y || 0;
+      const z = acc.z || 0;
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
+
+      const now = Date.now();
+      // Step Peak detection with min 320ms interval
+      if (magnitude > threshold && now - lastStepTime > 320) {
+        lastStepTime = now;
+        sensorTriggered = true;
+        setMotionSensorActive(true);
+        setWalkSteps(prev => prev + 1);
+      }
+    };
+
+    // Request Motion Sensor permission for iOS Safari & Android Chrome
+    if (typeof window !== 'undefined' && window.DeviceMotionEvent) {
+      if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener('devicemotion', handleMotion, true);
+            }
+          })
+          .catch(err => console.warn("Motion sensor permission:", err));
+      } else {
+        window.addEventListener('devicemotion', handleMotion, true);
+      }
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && window.DeviceMotionEvent) {
+        window.removeEventListener('devicemotion', handleMotion, true);
+      }
+    };
+  }, [isWalking]);
+
+  // 2. Timer & Fallback Simulator for Desktop / Stationary Test
   useEffect(() => {
     let interval = null;
     if (isWalking) {
       interval = setInterval(() => {
         setWalkSeconds(prev => prev + 1);
-        setWalkSteps(prev => prev + Math.floor(Math.random() * 2) + 1);
+        // If real motion sensor is not triggering (e.g. desktop PC test), increment fallback steps
+        if (!motionSensorActive) {
+          setWalkSteps(prev => prev + 1);
+        }
       }, 1000);
     } else {
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isWalking]);
+  }, [isWalking, motionSensorActive]);
 
   const formatTimer = (totalSec) => {
     const hrs = Math.floor(totalSec / 3600).toString().padStart(2, '0');
@@ -286,6 +342,11 @@ export default function App() {
                 setIsWalking(true);
                 setWalkSeconds(0);
                 setWalkSteps(0);
+                
+                // Request Motion Permission on Mobile iOS/Android
+                if (typeof window !== 'undefined' && window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') {
+                  DeviceMotionEvent.requestPermission().catch(console.error);
+                }
               }}
               title="산책 시작"
             >
@@ -313,9 +374,14 @@ export default function App() {
           </button>
         </nav>
 
-        {/* 5. Figma Active Walking Screen */}
+        {/* 5. Figma Active Walking Screen with Real Motion Sensor Indicator */}
         {isWalking && (
           <div className="walking-screen">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 800 }}>
+              <Activity size={14} color={motionSensorActive ? '#10b981' : '#60a5fa'} />
+              {motionSensorActive ? '📱 가속도 모션 센서 실제 걸음 감지 중' : '⏱️ 타이머 기반 만보기 가동 중 (휴대폰 흔들 시 자동전환)'}
+            </div>
+
             <div className="walking-timer">
               {formatTimer(walkSeconds)}
             </div>
