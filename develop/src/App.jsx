@@ -21,7 +21,6 @@ export default function App() {
   const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
   const [walkSteps, setWalkSteps] = useState(0);
-  const [motionSensorActive, setMotionSensorActive] = useState(false);
   const [records, setRecords] = useState(INITIAL_RECORDS);
 
   // Real WebRTC Camera for Walking Screen
@@ -89,19 +88,17 @@ export default function App() {
     }
   };
 
-  // 1. Real Device Physical Motion Sensor Pedometer Algorithm (DeviceMotionEvent)
+  // 1. STRICT PHYSICAL MOTION PEDOMETER ONLY (DeviceMotionEvent)
+  // Disable automatic timer incrementing completely. Steps ONLY increase when physical movement occurs!
   useEffect(() => {
-    if (!isWalking) {
-      setMotionSensorActive(false);
-      return;
-    }
+    if (!isWalking) return;
 
     let lastStepTime = 0;
-    const threshold = 11.2; // Physical acceleration threshold for human walking (m/s²)
-    let sensorTriggered = false;
+    const ACCELERATION_THRESHOLD = 12.8; // Physical motion threshold (m/s²). Lying still or holding still is ~9.8m/s², so it WON'T trigger!
+    const MIN_STEP_INTERVAL = 350; // Minimum time between human foot steps (ms)
 
     const handleMotion = (event) => {
-      const acc = event.accelerationIncludingGravity;
+      const acc = event.accelerationIncludingGravity || event.acceleration;
       if (!acc) return;
 
       const x = acc.x || 0;
@@ -110,11 +107,9 @@ export default function App() {
       const magnitude = Math.sqrt(x * x + y * y + z * z);
 
       const now = Date.now();
-      // Step Peak detection with min 320ms interval
-      if (magnitude > threshold && now - lastStepTime > 320) {
+      // Only count a step if physical movement exceeds threshold and min step interval
+      if (magnitude > ACCELERATION_THRESHOLD && (now - lastStepTime > MIN_STEP_INTERVAL)) {
         lastStepTime = now;
-        sensorTriggered = true;
-        setMotionSensorActive(true);
         setWalkSteps(prev => prev + 1);
       }
     };
@@ -141,22 +136,19 @@ export default function App() {
     };
   }, [isWalking]);
 
-  // 2. Timer & Fallback Simulator for Desktop / Stationary Test
+  // 2. Timer Effect (Increments duration ONLY. NEVER increments walkSteps!)
   useEffect(() => {
     let interval = null;
     if (isWalking) {
       interval = setInterval(() => {
         setWalkSeconds(prev => prev + 1);
-        // If real motion sensor is not triggering (e.g. desktop PC test), increment fallback steps
-        if (!motionSensorActive) {
-          setWalkSteps(prev => prev + 1);
-        }
+        // Step count is strictly NOT incremented by timer!
       }, 1000);
     } else {
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isWalking, motionSensorActive]);
+  }, [isWalking]);
 
   const formatTimer = (totalSec) => {
     const hrs = Math.floor(totalSec / 3600).toString().padStart(2, '0');
@@ -374,12 +366,12 @@ export default function App() {
           </button>
         </nav>
 
-        {/* 5. Figma Active Walking Screen with Real Motion Sensor Indicator */}
+        {/* 5. Figma Active Walking Screen */}
         {isWalking && (
           <div className="walking-screen">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 800 }}>
-              <Activity size={14} color={motionSensorActive ? '#10b981' : '#60a5fa'} />
-              {motionSensorActive ? '📱 가속도 모션 센서 실제 걸음 감지 중' : '⏱️ 타이머 기반 만보기 가동 중 (휴대폰 흔들 시 자동전환)'}
+            <div style={{ background: 'rgba(255,255,255,0.22)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Activity size={14} color="#10b981" />
+              📱 실제 스마트폰 보행 감지 시에만 걸음 수 측정
             </div>
 
             <div className="walking-timer">
