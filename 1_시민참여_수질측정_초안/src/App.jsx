@@ -20,7 +20,7 @@ export default function App() {
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
   const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
-  const [walkSteps, setWalkSteps] = useState(77);
+  const [walkSteps, setWalkSteps] = useState(0);
   const [records, setRecords] = useState(INITIAL_RECORDS);
 
   // Selected Photo Pin Feed Drawer State
@@ -37,7 +37,7 @@ export default function App() {
 
   const currentStation = BUSAN_RIVER_STATIONS.find(s => s.id === selectedStationId) || BUSAN_RIVER_STATIONS[0];
 
-  // Live Timer & Step Counter
+  // Live Timer & Step Counter (Starting cleanly from 0)
   useEffect(() => {
     let interval = null;
     if (isWalking) {
@@ -227,14 +227,14 @@ export default function App() {
             <span>수질 측정</span>
           </button>
 
-          {/* Tab 3: 산책하기 */}
+          {/* Tab 3: 산책하기 (0보부터 시작!) */}
           <div className="nav-center-circle-wrapper">
             <button 
               className="center-walk-big-btn"
               onClick={() => {
                 setIsWalking(true);
                 setWalkSeconds(0);
-                setWalkSteps(77);
+                setWalkSteps(0);
               }}
               title="산책 시작"
             >
@@ -252,7 +252,7 @@ export default function App() {
             <span>혜택</span>
           </button>
 
-          {/* Tab 5: 마이페이지 (Profile, Steps, Photo Gallery, Attendance, Logged-in Account) */}
+          {/* Tab 5: 마이페이지 */}
           <button 
             className={`nav-tab-item ${activeTab === 'mypage' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('mypage')}
