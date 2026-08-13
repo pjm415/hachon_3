@@ -14,60 +14,51 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
   const realtimeData = getStationWaterData(selectedStationId);
   const { metrics, bodTrend24h } = realtimeData;
   const mapContainerRef = useRef(null);
-  const [mapStatus, setMapStatus] = useState('loading'); // 'loading' | 'success' | 'error'
 
-  // Kakao Map initialization & marker update
+  // Kakao Map initialization & marker update per official guide
   useEffect(() => {
-    let isMounted = true;
+    const coords = STATION_COORDS[selectedStationId] || STATION_COORDS['2014A65'];
+    
+    const drawMap = () => {
+      if (!mapContainerRef.current || !window.kakao || !window.kakao.maps) return;
 
-    const initMap = () => {
-      if (!mapContainerRef.current) return;
+      try {
+        const container = mapContainerRef.current;
+        container.innerHTML = ''; // Clear container
 
-      if (window.kakao && window.kakao.maps) {
-        window.kakao.maps.load(() => {
-          if (!isMounted || !mapContainerRef.current) return;
+        const options = {
+          center: new window.kakao.maps.LatLng(coords.lat, coords.lng),
+          level: 4
+        };
 
-          try {
-            const coords = STATION_COORDS[selectedStationId] || STATION_COORDS['2014A65'];
-            const container = mapContainerRef.current;
-            container.innerHTML = ''; // clear previous instance
-
-            const options = {
-              center: new window.kakao.maps.LatLng(coords.lat, coords.lng),
-              level: 4
-            };
-
-            const map = new window.kakao.maps.Map(container, options);
-            const markerPosition = new window.kakao.maps.LatLng(coords.lat, coords.lng);
-            
-            const marker = new window.kakao.maps.Marker({
-              position: markerPosition
-            });
-            marker.setMap(map);
-
-            // InfoWindow
-            const infowindow = new window.kakao.maps.InfoWindow({
-              content: `<div style="padding:5px;font-size:12px;font-weight:bold;color:#0284c7;">📍 ${coords.name}</div>`
-            });
-            infowindow.open(map, marker);
-
-            setMapStatus('success');
-          } catch (err) {
-            console.error("Kakao Map init error:", err);
-            setMapStatus('error');
-          }
+        const map = new window.kakao.maps.Map(container, options);
+        const markerPosition = new window.kakao.maps.LatLng(coords.lat, coords.lng);
+        
+        const marker = new window.kakao.maps.Marker({
+          position: markerPosition
         });
-      } else {
-        // Retry if script loading is delayed
-        setTimeout(initMap, 500);
+        marker.setMap(map);
+
+        // InfoWindow
+        const infowindow = new window.kakao.maps.InfoWindow({
+          content: `<div style="padding:4px 8px;font-size:12px;font-weight:bold;color:#0284c7;">📍 ${coords.name}</div>`
+        });
+        infowindow.open(map, marker);
+      } catch (err) {
+        console.warn("Kakao map loading...", err);
       }
     };
 
-    initMap();
-
-    return () => {
-      isMounted = false;
-    };
+    if (window.kakao && window.kakao.maps) {
+      if (window.kakao.maps.load) {
+        window.kakao.maps.load(drawMap);
+      } else {
+        drawMap();
+      }
+    } else {
+      const timer = setTimeout(drawMap, 1000);
+      return () => clearTimeout(timer);
+    }
   }, [selectedStationId]);
 
   return (
@@ -99,7 +90,7 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
       {/* Real Kakao Map Canvas Container */}
       <div style={{
         position: 'relative',
-        height: '180px',
+        height: '190px',
         borderRadius: '16px',
         overflow: 'hidden',
         border: '1px solid var(--gray-200)',
@@ -107,19 +98,6 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
         background: '#f1f5f9'
       }}>
         <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }}></div>
-        {mapStatus !== 'success' && (
-          <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(255,255,255,0.92)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.8rem', color: 'var(--gray-700)', fontWeight: 700, gap: '4px', padding: '10px', textAlign: 'center'
-          }}>
-            <span>🟡 카카오 지도 연결 중...</span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--gray-500)', fontWeight: 400 }}>
-              (주소창이 http://localhost:5173 및 http://127.0.0.1:5173 인지 확인해 주세요)
-            </span>
-          </div>
-        )}
       </div>
 
       {/* 1. Main River Status Banner */}
