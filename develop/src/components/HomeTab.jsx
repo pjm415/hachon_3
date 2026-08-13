@@ -8,11 +8,11 @@ const STATION_COORDS = {
   '2014A85': { lat: 35.0985, lng: 128.9680, river: '괴정천', station: '하굿둑 지점' }
 };
 
-export default function HomeTab({ selectedStationId, setSelectedStationId, records }) {
+export default function HomeTab({ selectedStationId, setSelectedStationId, records, onSelectPhotoPin }) {
   const mapRef = useRef(null);
   const currentCoords = STATION_COORDS[selectedStationId] || STATION_COORDS['2014A65'];
 
-  // Kakao Map Autoload implementation
+  // Kakao Map Autoload & CustomOverlay Photo Pins implementation
   useEffect(() => {
     const coords = currentCoords;
 
@@ -37,32 +37,42 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
         });
         marker.setMap(map);
 
-        // Add Main InfoWindow
+        // Add Main Station InfoWindow
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:6px 12px;font-size:12px;font-weight:700;color:#1677ff;border-radius:8px;">📍 ${coords.river} ${coords.station}</div>`
         });
         infowindow.open(map, marker);
 
-        // Add User Uploaded Record Pinned Markers on Map
+        // Add CustomOverlay Photo Pins matching user screenshot
         if (records && records.length > 0) {
           records.forEach((rec, idx) => {
             if (rec.riverId === selectedStationId) {
-              const offsetLat = coords.lat + (idx * 0.0008 - 0.0004);
-              const offsetLng = coords.lng + (idx * 0.0008 - 0.0004);
-              const recPos = new window.kakao.maps.LatLng(offsetLat, offsetLng);
+              const lat = coords.lat + ((idx % 3) * 0.001 - 0.0008);
+              const lng = coords.lng + (Math.floor(idx / 3) * 0.0015 - 0.0007);
 
-              const recMarker = new window.kakao.maps.Marker({
-                position: recPos
-              });
-              recMarker.setMap(map);
+              const overlayDiv = document.createElement('div');
+              overlayDiv.className = 'photo-pin-wrapper';
+              overlayDiv.innerHTML = `
+                <div class="photo-pin-card ${rec.type}">
+                  <img class="photo-pin-img" src="${rec.photo}" alt="${rec.tag}" />
+                  <span class="photo-pin-badge ${rec.type === 'negative' ? 'negative-badge' : ''}">${rec.badgeCount || (idx * 5 + 2)}</span>
+                </div>
+                <div class="photo-pin-tail"></div>
+              `;
 
-              const color = rec.type === 'positive' ? '#10b981' : '#ef4444';
-              const recWindow = new window.kakao.maps.InfoWindow({
-                content: `<div style="padding:4px 8px;font-size:11px;font-weight:700;color:${color};">
-                  ${rec.type === 'positive' ? '🟢 긍정' : '🔴 부정'}: ${rec.tag}
-                </div>`
+              overlayDiv.onclick = (e) => {
+                e.stopPropagation();
+                if (onSelectPhotoPin) {
+                  onSelectPhotoPin(rec);
+                }
+              };
+
+              const customOverlay = new window.kakao.maps.CustomOverlay({
+                position: new window.kakao.maps.LatLng(lat, lng),
+                content: overlayDiv,
+                yAnchor: 1.15
               });
-              recWindow.open(map, recMarker);
+              customOverlay.setMap(map);
             }
           });
         }
@@ -88,7 +98,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
       }, 300);
       return () => clearInterval(timer);
     }
-  }, [selectedStationId, records]);
+  }, [selectedStationId, records, onSelectPhotoPin]);
 
   return (
     <div className="map-container">

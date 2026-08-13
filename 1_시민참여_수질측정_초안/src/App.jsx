@@ -1,34 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import HomeTab from './components/HomeTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Bell, Camera, Pause, Footprints, Sparkles, X, Image as ImageIcon, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Bell, Camera, Pause, Footprints, Sparkles, X, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2 } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
-  { id: 1, riverId: '2014A65', riverName: '온천천', type: 'positive', tag: '맑은 물 관찰', text: '세병교 하부 송사리 떼 관찰됨, 악취 없음', author: '최수조 (주민)', time: '10분 전', photo: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=400&q=80' },
-  { id: 2, riverId: '2014A70', riverName: '동천', type: 'negative', tag: '오염 제보', text: '동천 범일교 하구 약간의 유류 띠 발견됨', author: '최진아 (시민기자)', time: '25분 전', photo: 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=400&q=80' },
-  { id: 3, riverId: '2014A85', riverName: '괴정천', type: 'positive', tag: '수질 측정', text: 'DO 용존산소 9.2mg/L로 매우 우수 평가', author: '기점수 (측정단)', time: '40분 전', photo: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=400&q=80' },
+  { id: 1, riverId: '2014A65', riverName: '온천천', type: 'positive', tag: '맑은 물 관찰', text: '세병교 하부 송사리 떼 관찰됨, 악취 없고 물이 아주 투명합니다!', author: '최수조 (주민)', time: '10분 전', badgeCount: 8, photo: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80', likes: 24, comments: 5 },
+  { id: 2, riverId: '2014A65', riverName: '온천천', type: 'positive', tag: '생물 관찰', text: '온천천 산책로 근처에서 왜가리 발견! 생태계 복원 성공적', author: '기점수 (측정단)', time: '30분 전', badgeCount: 16, photo: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80', likes: 42, comments: 8 },
+  { id: 3, riverId: '2014A70', riverName: '동천', type: 'negative', tag: '오염 제보', text: '동천 범일교 하구 약간의 미세 유류 띠 발견됨 빠른 조치 필요', author: '최진아 (시민기자)', time: '25분 전', badgeCount: 2, photo: 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=600&q=80', likes: 18, comments: 12 },
+  { id: 4, riverId: '2014A70', riverName: '동천', type: 'negative', tag: '악취 발생', text: '범일교 상류 인근 악취 수치 상승 제보합니다.', author: '최풍림 (지킴이)', time: '1시간 전', badgeCount: 56, photo: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=600&q=80', likes: 89, comments: 24 },
+  { id: 5, riverId: '2014A85', riverName: '괴정천', type: 'positive', tag: '수질 측정', text: 'DO 용존산소 9.2mg/L로 매우 우수한 1급수 상태 유지 중', author: '조성하 (봉사단)', time: '40분 전', badgeCount: 20, photo: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=600&q=80', likes: 35, comments: 4 }
 ];
 
 export default function App() {
   const [selectedStationId, setSelectedStationId] = useState('2014A65'); // Default: 온천천
-  const [isWalking, setIsWalking] = useState(false); // 산책 중 화면 토글
+  const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
   const [walkSteps, setWalkSteps] = useState(77);
   const [records, setRecords] = useState(INITIAL_RECORDS);
 
+  // Selected Photo Pin Feed Drawer State
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [showFeedDrawer, setShowFeedDrawer] = useState(false);
+
   // Upload modal state
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadType, setUploadType] = useState('positive'); // 'positive' or 'negative'
+  const [uploadType, setUploadType] = useState('positive');
   const [uploadTag, setUploadTag] = useState('맑은 물 관찰');
   const [uploadComment, setUploadComment] = useState('');
-  const [uploadPhoto, setUploadPhoto] = useState('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=400&q=80');
+  const [uploadPhoto, setUploadPhoto] = useState('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80');
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Current River station details
   const currentStation = BUSAN_RIVER_STATIONS.find(s => s.id === selectedStationId) || BUSAN_RIVER_STATIONS[0];
 
-  // Live Timer & Step counter when walking
+  // Live Timer & Step Counter
   useEffect(() => {
     let interval = null;
     if (isWalking) {
@@ -56,7 +61,28 @@ export default function App() {
     }, 3500);
   };
 
-  // Upload submit handler
+  // Open Feed Drawer when a photo pin is clicked
+  const handleSelectPhotoPin = (record) => {
+    setSelectedRecord(record);
+    setShowFeedDrawer(true);
+  };
+
+  // Like Record Toggle
+  const handleToggleLike = (recordId) => {
+    setRecords(records.map(r => {
+      if (r.id === recordId) {
+        const isLiked = r.userLiked;
+        return {
+          ...r,
+          userLiked: !isLiked,
+          likes: isLiked ? r.likes - 1 : r.likes + 1
+        };
+      }
+      return r;
+    }));
+  };
+
+  // Submit Upload Form
   const handleUploadSubmit = (e) => {
     e.preventDefault();
     const newRecord = {
@@ -65,17 +91,22 @@ export default function App() {
       riverName: currentStation.river,
       type: uploadType,
       tag: uploadTag || (uploadType === 'positive' ? '맑은 물 관찰' : '오염 제보'),
-      text: uploadComment || (uploadType === 'positive' ? '하천 환경이 매우 깨끗하고 쾌적합니다.' : '하천 수질 오염 및 수질 이상이 발견되었습니다.'),
+      text: uploadComment || (uploadType === 'positive' ? '하천 환경이 매우 깨끗하고 쾌적합니다.' : '하천 수질 오염 및 이상 현상이 발견되었습니다.'),
       author: '시민 (나)',
       time: '방금 전',
-      photo: uploadPhoto
+      badgeCount: 1,
+      photo: uploadPhoto,
+      likes: 1,
+      comments: 0
     };
 
     setRecords([newRecord, ...records]);
     setShowUploadModal(false);
     setUploadComment('');
-    showNotification(`🎉 [${currentStation.river}] ${uploadType === 'positive' ? '긍정' : '부정'} 기록 업로드 완료! 동백전 +1,000원 적립`);
+    showNotification(`🎉 지도에 사진이 등록되었습니다! [${currentStation.river}] 동백전 +1,000원 적립`);
   };
+
+  const currentRiverRecords = records.filter(r => r.riverId === selectedStationId);
 
   return (
     <div className="stage">
@@ -87,12 +118,12 @@ export default function App() {
             top: '64px',
             left: '16px',
             right: '16px',
-            background: 'linear-gradient(135deg, #10b981, #059669)',
+            background: 'linear-gradient(135deg, #1677ff, #0958d9)',
             color: 'white',
             padding: '12px 16px',
             borderRadius: '16px',
-            boxShadow: '0 10px 20px rgba(16, 185, 129, 0.4)',
-            zIndex: 150,
+            boxShadow: '0 10px 20px rgba(22, 119, 255, 0.4)',
+            zIndex: 160,
             fontWeight: 700,
             fontSize: '0.82rem',
             display: 'flex',
@@ -104,23 +135,29 @@ export default function App() {
           </div>
         )}
 
-        {/* 1. Header Bar matching Figma Frame 3 */}
+        {/* 1. Top Header Bar */}
         <header className="topbar">
           <div className="brand">
             <span className="brand-name">리버로그</span>
-            <span className="brand-badge">시민 리버 피드</span>
+            <span 
+              className="brand-badge" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => setShowFeedDrawer(true)}
+            >
+              시민 리버 피드 📸
+            </span>
           </div>
           <button 
             className="icon-btn" 
             type="button" 
             aria-label="알림"
-            onClick={() => showNotification("🔔 수질 모니터링 알림이 정상 작동 중입니다.")}
+            onClick={() => showNotification("🔔 실시간 시민 수질 사진 피드가 갱신되었습니다.")}
           >
             <Bell size={20} />
           </button>
         </header>
 
-        {/* 2. Sub-header / River Filter Tabs matching Figma Frame 3 */}
+        {/* 2. Sub-header River Filter Tabs */}
         <div className="river-tabs">
           {BUSAN_RIVER_STATIONS.map((st) => (
             <button
@@ -133,14 +170,15 @@ export default function App() {
           ))}
         </div>
 
-        {/* 3. Center Main View: Full Kakao Map */}
+        {/* 3. Center Main View: Kakao Map with Photo Pins */}
         <HomeTab 
           selectedStationId={selectedStationId} 
           setSelectedStationId={setSelectedStationId}
           records={records}
+          onSelectPhotoPin={handleSelectPhotoPin}
         />
 
-        {/* 4. Bottom Nav Bar matching Figma Frame 3 */}
+        {/* 4. Bottom Navigation Bar */}
         <nav className="bottom-nav-figma">
           <button 
             className="center-walk-btn-figma"
@@ -155,15 +193,13 @@ export default function App() {
           </button>
         </nav>
 
-        {/* 5. Figma "산책중 화면" Screen Modal */}
+        {/* 5. Figma Active Walking Screen */}
         {isWalking && (
           <div className="walking-screen">
-            {/* Top Timer */}
             <div className="walking-timer">
               {formatTimer(walkSeconds)}
             </div>
 
-            {/* Center Content matching Figma */}
             <div className="walking-center-content">
               <div className="walking-river-title">
                 {currentStation.river} 산책 중...
@@ -174,9 +210,7 @@ export default function App() {
               <Footprints className="walking-footprint-icon" size={72} />
             </div>
 
-            {/* Bottom Actions matching Figma */}
             <div className="walking-bottom-actions">
-              {/* Upload Button */}
               <button 
                 className="walking-action-btn"
                 onClick={() => setShowUploadModal(true)}
@@ -187,7 +221,6 @@ export default function App() {
                 <span>업로드</span>
               </button>
 
-              {/* Pause / Finish Walking Button */}
               <button 
                 className="walking-action-btn"
                 onClick={() => {
@@ -204,13 +237,78 @@ export default function App() {
           </div>
         )}
 
-        {/* 6. Upload Modal ("업로드" 팝업: 긍정기록/부정기록) */}
+        {/* 6. Citizen River Photo Feed Modal (Triggered by clicking ANY photo pin on map) */}
+        {showFeedDrawer && (
+          <div className="feed-drawer-backdrop" onClick={() => setShowFeedDrawer(false)}>
+            <div className="feed-drawer" onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>
+                  📸 [{currentStation.river}] 시민 리버 피드 ({currentRiverRecords.length}건)
+                </h3>
+                <button 
+                  style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontWeight: 800 }}
+                  onClick={() => setShowFeedDrawer(false)}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Feed Card Items */}
+              {currentRiverRecords.map((item) => (
+                <div key={item.id} className="feed-item-card">
+                  <div className="feed-item-header">
+                    <div className="feed-author-info">
+                      <div className="feed-avatar">{item.author.charAt(0)}</div>
+                      <div>
+                        <div className="feed-author-name">{item.author}</div>
+                        <div className="feed-time">{item.riverName} • {item.time}</div>
+                      </div>
+                    </div>
+                    <span className={`feed-tag ${item.type}`}>
+                      {item.type === 'positive' ? '🟢 ' : '🔴 '}{item.tag}
+                    </span>
+                  </div>
+
+                  <img src={item.photo} alt={item.tag} className="feed-photo" />
+                  <p className="feed-comment">{item.text}</p>
+
+                  <div className="feed-actions">
+                    <span 
+                      style={{ cursor: 'pointer', color: item.userLiked ? '#ef4444' : '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      onClick={() => handleToggleLike(item.id)}
+                    >
+                      <Heart size={16} fill={item.userLiked ? '#ef4444' : 'none'} color={item.userLiked ? '#ef4444' : '#64748b'} /> {item.likes}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <MessageCircle size={16} /> {item.comments}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Share2 size={16} /> 공유
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              <button 
+                className="btn-submit"
+                onClick={() => {
+                  setShowFeedDrawer(false);
+                  setShowUploadModal(true);
+                }}
+              >
+                📷 나도 현장 사진 올리고 동백전 받기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 7. Upload Modal */}
         {showUploadModal && (
           <div className="upload-modal-backdrop" onClick={() => setShowUploadModal(false)}>
             <div className="upload-modal" onClick={e => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>
-                  📸 [{currentStation.river}] 산책 기록 업로드
+                  📸 [{currentStation.river}] 지도 사진 등록
                 </h3>
                 <button 
                   style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontWeight: 800 }}
@@ -220,7 +318,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Positive / Negative Toggle */}
               <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
                 기록 유형 선택
               </div>
@@ -247,7 +344,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Tag / Status Select */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
                   태그 주제
@@ -274,10 +370,9 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Photo Preview & Upload */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
-                  사진 등록
+                  사진 선택 (지도 위에 표시됩니다)
                 </label>
                 <div style={{ position: 'relative', width: '100%', height: '140px', borderRadius: '14px', overflow: 'hidden', background: '#f1f5f9', border: '2px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img src={uploadPhoto} alt="미리보기" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -285,41 +380,40 @@ export default function App() {
                     type="button"
                     onClick={() => {
                       const samplePhotos = [
-                        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=400&q=80',
-                        'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=400&q=80',
-                        'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=400&q=80'
+                        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80',
+                        'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=600&q=80',
+                        'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=600&q=80',
+                        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80'
                       ];
                       const nextIndex = (samplePhotos.indexOf(uploadPhoto) + 1) % samplePhotos.length;
                       setUploadPhoto(samplePhotos[nextIndex]);
                     }}
                     style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
-                    <ImageIcon size={14} /> 사진 변경
+                    <ImageIcon size={14} /> 다른 사진 선택
                   </button>
                 </div>
               </div>
 
-              {/* Comment Input */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
-                  한줄 기록 내용
+                  한줄 제보 기록
                 </label>
                 <textarea
                   rows={3}
                   value={uploadComment}
                   onChange={e => setUploadComment(e.target.value)}
-                  placeholder={uploadType === 'positive' ? '예: 세병교 하부 송사리 떼 관찰됨, 물이 맑고 악취 없음' : '예: 동천 범일교 하구 약간의 유류 띠 발견됨'}
+                  placeholder={uploadType === 'positive' ? '예: 물이 맑고 송사리 떼가 많이 보입니다.' : '예: 동천 범일교 하구에 기름 띠가 보입니다.'}
                   style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '0.88rem', resize: 'none' }}
                 />
               </div>
 
-              {/* Submit Button */}
               <button 
                 type="button"
                 className="btn-submit"
                 onClick={handleUploadSubmit}
               >
-                제보 등록 완료 (동백전 +1,000원)
+                📍 지도에 사진 핀 올리기 (동백전 +1,000원)
               </button>
             </div>
           </div>
