@@ -3,11 +3,11 @@ import { Compass, Crosshair } from 'lucide-react';
 import { BUSAN_RIVER_STATIONS } from '../api/waterQualityApi';
 
 // 부산 주요 하천 정밀 GPS 좌표 매핑
-// 괴정천 하굿둑: 강변대로 괴정천 파란색 물길 수로 북쪽 상류 방향 정밀 조정 좌표 (35.1042, 128.9603)
+// 괴정천 하굿둑: 괴정천 파란색 물길 수로 아주 아주 조금 더 북쪽 미세 이동 좌표 (35.1050, 128.9604)
 const STATION_COORDS = {
   '2014A65': { lat: 35.1970, lng: 129.0835, river: '온천천', station: '세병교 지점' },
   '2014A70': { lat: 35.1432, lng: 129.0625, river: '동천', station: '범일교 지점' },
-  '2014A85': { lat: 35.1042, lng: 128.9603, river: '괴정천', station: '하굿둑' }
+  '2014A85': { lat: 35.1050, lng: 128.9604, river: '괴정천', station: '하굿둑' }
 };
 
 export default function HomeTab({ selectedStationId, setSelectedStationId, records, onSelectPhotoPin }) {
