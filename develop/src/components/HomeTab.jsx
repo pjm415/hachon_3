@@ -3,11 +3,11 @@ import { Compass, Crosshair } from 'lucide-react';
 import { BUSAN_RIVER_STATIONS } from '../api/waterQualityApi';
 
 // 부산 주요 하천 정밀 GPS 좌표 매핑
-// 괴정천 (지오빌1차 아파트 앞 지점): 스크린샷 맵 상의 지오빌1차 아파트 바로 앞 괴정천 파란색 물길 정밀 좌표 (35.1068, 128.9655)
+// 괴정천 (하구 지점): 사용자 캡처 수로 한가운데 괴정천 파란색 물길 정밀 좌표 (35.1064, 128.9648)
 const STATION_COORDS = {
   '2014A65': { lat: 35.1970, lng: 129.0835, river: '온천천', station: '세병교 지점' },
   '2014A70': { lat: 35.1432, lng: 129.0625, river: '동천', station: '범일교 지점' },
-  '2014A85': { lat: 35.1068, lng: 128.9655, river: '괴정천', station: '지오빌1차 아파트 앞' }
+  '2014A85': { lat: 35.1064, lng: 128.9648, river: '괴정천', station: '하구 지점' }
 };
 
 export default function HomeTab({ selectedStationId, setSelectedStationId, records, onSelectPhotoPin }) {
@@ -39,7 +39,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
         });
         marker.setMap(map);
 
-        // Add Main Station InfoWindow
+        // Add Main Station InfoWindow (No apartment name, strictly river name '괴정천')
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:6px 12px;font-size:12px;font-weight:700;color:#1677ff;border-radius:8px;">📍 ${coords.river} ${coords.station}</div>`
         });
@@ -49,8 +49,8 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
         if (records && records.length > 0) {
           records.forEach((rec, idx) => {
             if (rec.riverId === selectedStationId) {
-              const lat = coords.lat + ((idx % 3) * 0.0004 - 0.0002);
-              const lng = coords.lng + (Math.floor(idx / 3) * 0.0005 - 0.0002);
+              const lat = coords.lat + ((idx % 3) * 0.0003 - 0.00015);
+              const lng = coords.lng + (Math.floor(idx / 3) * 0.0004 - 0.0002);
 
               const overlayDiv = document.createElement('div');
               overlayDiv.className = 'photo-pin-wrapper';
@@ -119,7 +119,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
       {/* Floating Target Location */}
       <button 
         className="floating-target" 
-        onClick={() => alert(`📍 내 위치: ${currentCoords.river} ${currentCoords.station} (부산 지오빌1차 아파트 앞 괴정천)`)}
+        onClick={() => alert(`📍 내 위치: ${currentCoords.river} ${currentCoords.station} (괴정천 파란색 물길 수로)`)}
         title="내 위치 찾기"
       >
         <Crosshair size={24} />

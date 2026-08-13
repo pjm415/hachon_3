@@ -12,7 +12,7 @@ const INITIAL_RECORDS = [
   { id: 2, riverId: '2014A65', riverName: '온천천', type: 'positive', tag: '생물 관찰', text: '온천천 산책로 근처에서 왜가리 발견! 생태계 복원 성공적', author: '기점수 (측정단)', time: '30분 전', badgeCount: 16, photo: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80', likes: 42, comments: 8, lat: 35.1982, lng: 129.0845 },
   { id: 3, riverId: '2014A70', riverName: '동천', type: 'negative', tag: '오염 제보', text: '동천 범일교 하구 약간의 미세 유류 띠 발견됨 빠른 조치 필요', author: '최진아 (시민기자)', time: '25분 전', badgeCount: 2, photo: 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=600&q=80', likes: 18, comments: 12, lat: 35.1432, lng: 129.0625 },
   { id: 4, riverId: '2014A70', riverName: '동천', type: 'negative', tag: '악취 발생', text: '범일교 상류 인근 악취 수치 상승 제보합니다.', author: '최풍림 (지킴이)', time: '1시간 전', badgeCount: 56, photo: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=600&q=80', likes: 89, comments: 24, lat: 35.1445, lng: 129.0635 },
-  { id: 5, riverId: '2014A85', riverName: '괴정천', type: 'positive', tag: '수질 측정', text: 'DO 용존산소 9.2mg/L로 매우 우수한 1급수 상태 유지 중', author: '조성하 (봉사단)', time: '40분 전', badgeCount: 20, photo: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=600&q=80', likes: 35, comments: 4, lat: 35.1068, lng: 128.9655 }
+  { id: 5, riverId: '2014A85', riverName: '괴정천', type: 'positive', tag: '수질 측정', text: 'DO 용존산소 9.2mg/L로 매우 우수한 1급수 상태 유지 중', author: '조성하 (봉사단)', time: '40분 전', badgeCount: 20, photo: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=600&q=80', likes: 35, comments: 4, lat: 35.1064, lng: 128.9648 }
 ];
 
 const INITIAL_HISTORY = [
@@ -65,7 +65,7 @@ export default function App() {
       setUserGpsLocation({
         lat: currentStation.lat || 35.1970,
         lng: currentStation.lng || 129.0835,
-        address: `부산광역시 사하구 ${currentStation.river} 지오빌1차 아파트 인근`
+        address: `부산광역시 사하구 ${currentStation.river} 수로 인근`
       });
       return;
     }
@@ -86,9 +86,9 @@ export default function App() {
         console.warn("HTML5 GPS Location Access Denied or Timeout:", err);
         // Fallback river coordinate
         setUserGpsLocation({
-          lat: currentStation.lat || 35.1068,
-          lng: currentStation.lng || 128.9655,
-          address: `부산광역시 ${currentStation.river} 지오빌1차 아파트 인근 (GPS 위치)`
+          lat: currentStation.lat || 35.1064,
+          lng: currentStation.lng || 128.9648,
+          address: `부산광역시 ${currentStation.river} 수로 인근 (GPS 위치)`
         });
         setIsGpsLoading(false);
       },
@@ -266,8 +266,8 @@ export default function App() {
       photo: uploadPhoto,
       likes: 1,
       comments: 0,
-      lat: userGpsLocation ? userGpsLocation.lat : (currentStation.lat || 35.1068),
-      lng: userGpsLocation ? userGpsLocation.lng : (currentStation.lng || 128.9655),
+      lat: userGpsLocation ? userGpsLocation.lat : (currentStation.lat || 35.1064),
+      lng: userGpsLocation ? userGpsLocation.lng : (currentStation.lng || 128.9648),
       gpsAddress: userGpsLocation ? userGpsLocation.address : '부산광역시 GPS 위치'
     };
 
