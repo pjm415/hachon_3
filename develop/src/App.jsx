@@ -34,8 +34,9 @@ export default function App() {
   const [dongbaekBalance, setDongbaekBalance] = useState(4000);
   const [dongbaekHistory, setDongbaekHistory] = useState(INITIAL_HISTORY);
 
-  // APK Banner State
-  const [showApkBanner, setShowApkBanner] = useState(true);
+  // PWA App Installation Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showPwaBanner, setShowPwaBanner] = useState(true);
 
   // Real-time HTML5 GPS Location State
   const [userGpsLocation, setUserGpsLocation] = useState(null);
@@ -62,14 +63,30 @@ export default function App() {
 
   const currentStation = BUSAN_RIVER_STATIONS.find(s => s.id === selectedStationId) || BUSAN_RIVER_STATIONS[0];
 
-  const triggerApkDownload = () => {
-    const link = document.createElement('a');
-    link.href = '/RiverLog.apk';
-    link.download = 'RiverLog.apk';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showNotification("📥 안드로이드 RiverLog.apk 파일 다운로드가 시작되었습니다!");
+  // Listen for PWA beforeinstallprompt event for seamless Android Installation
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowPwaBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        showNotification("🎉 리버로그 앱이 스마트폰 홈 화면에 정상 설치되었습니다!");
+      }
+      setDeferredPrompt(null);
+      setShowPwaBanner(false);
+    } else {
+      alert("📱 스마트폰 크롬 브라우저 우측 상단 메뉴(⋮) ➔ '앱 설치' 또는 '홈 화면에 추가'를 누르시면 안드로이드 정식 앱으로 다운로드/설치됩니다!");
+    }
   };
 
   // Fetch Real-Time HTML5 GPS Location
@@ -347,8 +364,8 @@ export default function App() {
           </button>
         </header>
 
-        {/* 📥 안드로이드 APK 파일 직접 다운로드 안내 배너 */}
-        {showApkBanner && (
+        {/* 📱 안드로이드 앱 스마트폰 설치 유도 배너 */}
+        {showPwaBanner && (
           <div style={{
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
             color: 'white',
@@ -362,38 +379,32 @@ export default function App() {
             zIndex: 110
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.1rem' }}>🤖</span>
+              <span style={{ fontSize: '1.1rem' }}>📱</span>
               <div>
-                <span style={{ display: 'block', color: '#ffffff', fontWeight: 800 }}>안드로이드 APK 설치 파일</span>
-                <span style={{ display: 'block', color: '#94a3b8', fontSize: '0.68rem', fontWeight: 600 }}>RiverLog.apk 직접 스마트폰 다운로드</span>
+                <span style={{ display: 'block', color: '#ffffff', fontWeight: 800 }}>리버로그 앱 스마트폰 설치</span>
+                <span style={{ display: 'block', color: '#94a3b8', fontSize: '0.68rem', fontWeight: 600 }}>안드로이드 바탕화면에 앱 아이콘 추가</span>
               </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <a
-                href="/RiverLog.apk"
-                download="RiverLog.apk"
-                onClick={(e) => {
-                  showNotification("📥 RiverLog.apk 안드로이드 파일 다운로드가 시작되었습니다!");
-                }}
+              <button
+                onClick={handleInstallPwa}
                 style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  background: 'linear-gradient(135deg, #1677ff, #0958d9)',
                   color: 'white',
-                  textDecoration: 'none',
+                  border: 'none',
                   padding: '7px 12px',
                   borderRadius: '10px',
                   fontSize: '0.74rem',
                   fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)'
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 10px rgba(22, 119, 255, 0.3)'
                 }}
               >
-                <Download size={14} /> APK 다운로드
-              </a>
+                앱 설치
+              </button>
               <button
-                onClick={() => setShowApkBanner(false)}
+                onClick={() => setShowPwaBanner(false)}
                 style={{
                   background: 'none',
                   border: 'none',
