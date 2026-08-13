@@ -4,7 +4,7 @@ import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
 import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, MapPin } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, MapPin, Download } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -34,6 +34,10 @@ export default function App() {
   const [dongbaekBalance, setDongbaekBalance] = useState(4000);
   const [dongbaekHistory, setDongbaekHistory] = useState(INITIAL_HISTORY);
 
+  // PWA App Installation Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showPwaBanner, setShowPwaBanner] = useState(true);
+
   // Real-time HTML5 GPS Location State
   const [userGpsLocation, setUserGpsLocation] = useState(null);
   const [isGpsLoading, setIsGpsLoading] = useState(false);
@@ -58,6 +62,32 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState(null);
 
   const currentStation = BUSAN_RIVER_STATIONS.find(s => s.id === selectedStationId) || BUSAN_RIVER_STATIONS[0];
+
+  // Listen for PWA beforeinstallprompt event
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowPwaBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        showNotification("🎉 리버로그 앱이 스마트폰 홈 화면에 다운로드/설치되었습니다!");
+      }
+      setDeferredPrompt(null);
+      setShowPwaBanner(false);
+    } else {
+      alert("📱 스마트폰 브라우저 메뉴(⋮)에서 '앱 설치' 또는 '홈 화면에 추가'를 터치하시면 설치가 진행됩니다!");
+    }
+  };
 
   // Fetch Real-Time HTML5 GPS Location
   const fetchRealtimeGps = () => {
@@ -333,6 +363,62 @@ export default function App() {
             <Bell size={20} />
           </button>
         </header>
+
+        {/* 📱 PWA 앱 스마트폰 다운로드/설치 안내 배너 */}
+        {showPwaBanner && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            color: 'white',
+            padding: '10px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            zIndex: 110
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.1rem' }}>📱</span>
+              <div>
+                <span style={{ display: 'block', color: '#ffffff', fontWeight: 800 }}>리버로그 스마트폰 앱 설치</span>
+                <span style={{ display: 'block', color: '#94a3b8', fontSize: '0.68rem', fontWeight: 600 }}>바탕화면에 추가하여 APK처럼 바로 구동</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                onClick={handleInstallClick}
+                style={{
+                  background: 'linear-gradient(135deg, #1677ff, #0958d9)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '7px 12px',
+                  borderRadius: '10px',
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 10px rgba(22, 119, 255, 0.3)'
+                }}
+              >
+                앱 설치하기
+              </button>
+              <button
+                onClick={() => setShowPwaBanner(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 2. Sub-header River Filter Tabs */}
         {activeTab === 'home' && (
