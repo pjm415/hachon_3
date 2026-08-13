@@ -15,6 +15,13 @@ const INITIAL_RECORDS = [
   { id: 5, riverId: '2014A85', riverName: '괴정천', type: 'positive', tag: '수질 측정', text: 'DO 용존산소 9.2mg/L로 매우 우수한 1급수 상태 유지 중', author: '조성하 (봉사단)', time: '40분 전', badgeCount: 20, photo: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=600&q=80', likes: 35, comments: 4 }
 ];
 
+const INITIAL_HISTORY = [
+  { id: 1, title: '온천천 시민 수질 측정 검증', date: '오늘 12:45', amount: '+1,000원', river: '온천천', icon: '🧪' },
+  { id: 2, title: '온천천 하천 산책 77보 완료', date: '오늘 11:20', amount: '+1,000원', river: '온천천', icon: '👣' },
+  { id: 3, title: '동천 수질 오염 현장 사진 제보', date: '어제 16:10', amount: '+1,000원', river: '동천', icon: '📸' },
+  { id: 4, title: '괴정천 맑은 물 관찰 제보', date: '8월 12일', amount: '+1,000원', river: '괴정천', icon: '🟢' },
+];
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'measure', 'benefits', 'mypage'
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
@@ -22,6 +29,10 @@ export default function App() {
   const [walkSeconds, setWalkSeconds] = useState(0);
   const [walkSteps, setWalkSteps] = useState(0);
   const [records, setRecords] = useState(INITIAL_RECORDS);
+
+  // Global Realtime Dongbaekjeon Pay Balance & History State
+  const [dongbaekBalance, setDongbaekBalance] = useState(4000);
+  const [dongbaekHistory, setDongbaekHistory] = useState(INITIAL_HISTORY);
 
   // Real WebRTC Camera for Walking Screen
   const [showRealCameraModal, setShowRealCameraModal] = useState(false);
@@ -182,12 +193,17 @@ export default function App() {
     }));
   };
 
-  // Handle citizen measurement addition
+  // Handle citizen measurement addition -> Realtime Balance Add +1000 KRW
   const handleAddMeasurement = (newMeasure) => {
-    showNotification("🎉 시민 수질 측정 완료! 동백전 +1,000원 적립되었습니다.");
+    setDongbaekBalance(prev => prev + 1000);
+    setDongbaekHistory(prev => [
+      { id: Date.now(), title: `${currentStation.river} 시민 수질 kit 측정 검증 완료`, date: '오늘 방금', amount: '+1,000원', river: currentStation.river, icon: '🧪' },
+      ...prev
+    ]);
+    showNotification("🎉 시민 수질 측정 완료! 동백전 +1,000원이 혜택 지갑에 즉시 적립되었습니다.");
   };
 
-  // Handle Upload Form Submit (Updated reward: Dongbaekjeon +10 KRW)
+  // Handle Upload Form Submit -> Realtime Balance Add +10 KRW
   const handleUploadSubmit = (e) => {
     e.preventDefault();
     const newRecord = {
@@ -208,13 +224,21 @@ export default function App() {
     setRecords([newRecord, ...records]);
     setShowUploadModal(false);
     setUploadComment('');
-    showNotification(`🎉 지도에 사진 핀이 등록되었습니다! [${currentStation.river}] 동백전 +10원 적립 완료!`);
+
+    // Realtime update Benefits balance (+10 KRW)
+    setDongbaekBalance(prev => prev + 10);
+    setDongbaekHistory(prev => [
+      { id: Date.now(), title: `${currentStation.river} 지도 사진 핀 및 악취 조사`, date: '오늘 방금', amount: '+10원', river: currentStation.river, icon: '📸' },
+      ...prev
+    ]);
+
+    showNotification(`🎉 지도에 사진 핀이 등록되었습니다! [${currentStation.river}] 동백전 +10원이 혜택 지갑에 즉시 적립되었습니다!`);
   };
 
   const currentRiverRecords = records.filter(r => r.riverId === selectedStationId);
 
   // 10보당 1원 적립
-  const earnedDongbaek = Math.floor(walkSteps / 10).toString().padStart(2, '0');
+  const earnedDongbaek = Math.floor(walkSteps / 10);
 
   return (
     <div className="stage">
@@ -298,7 +322,12 @@ export default function App() {
           )}
 
           {activeTab === 'benefits' && (
-            <BenefitsTab onShowToast={showNotification} />
+            <BenefitsTab 
+              balance={dongbaekBalance} 
+              setBalance={setDongbaekBalance}
+              historyList={dongbaekHistory}
+              onShowToast={showNotification} 
+            />
           )}
 
           {activeTab === 'mypage' && (
@@ -396,7 +425,7 @@ export default function App() {
                 display: 'inline-block',
                 border: '1px solid #e0f2fe'
               }}>
-                적립 동백전 : {earnedDongbaek}원 (10보당 1원)
+                적립 동백전 : {earnedDongbaek.toString().padStart(2, '0')}원 (10보당 1원)
               </div>
 
               <Footprints className="walking-footprint-icon" size={64} style={{ color: '#1677ff', margin: '0 auto' }} />
@@ -417,7 +446,14 @@ export default function App() {
                 className="walking-action-btn"
                 onClick={() => {
                   setIsWalking(false);
-                  showNotification(`🏅 ${currentStation.river} 산책 완료! 총 ${walkSteps.toLocaleString()}보 (${earnedDongbaek}원) 적립 완료!`);
+                  if (earnedDongbaek > 0) {
+                    setDongbaekBalance(prev => prev + earnedDongbaek);
+                    setDongbaekHistory(prev => [
+                      { id: Date.now(), title: `${currentStation.river} 하천 산책 ${walkSteps}보 완주`, date: '오늘 방금', amount: `+${earnedDongbaek.toLocaleString()}원`, river: currentStation.river, icon: '👣' },
+                      ...prev
+                    ]);
+                  }
+                  showNotification(`🏅 ${currentStation.river} 산책 완료! 총 ${walkSteps.toLocaleString()}보 (동백전 +${earnedDongbaek}원) 혜택 지갑 적립 완료!`);
                 }}
               >
                 <div className="walking-action-circle">
@@ -641,7 +677,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* User Requested: Odor Level Survey (악취 정도 조사 필드) */}
+              {/* User Requested: Odor Level Survey */}
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: '#475569', marginBottom: '6px' }}>
                   🌸 현장 악취 정도 조사
@@ -706,7 +742,7 @@ export default function App() {
                 />
               </div>
 
-              {/* User Requested: Updated reward to Dongbaekjeon +10 KRW (동백전 +10원) */}
+              {/* User Requested: Updated reward to Dongbaekjeon +10 KRW */}
               <button 
                 type="button"
                 className="btn-submit"

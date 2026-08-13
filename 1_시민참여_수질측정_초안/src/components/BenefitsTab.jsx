@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
 import { Wallet, Ticket, MapPin, Sparkles, ArrowRightLeft, CheckCircle2, QrCode, Store, ChevronRight, Gift } from 'lucide-react';
 
-export default function BenefitsTab({ onShowToast }) {
+export default function BenefitsTab({ balance = 4000, setBalance, historyList = [], onShowToast }) {
   const [subTab, setSubTab] = useState('wallet'); // 'wallet', 'coupons', 'map'
-  const [balance, setBalance] = useState(4000);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(null);
-
-  // Earning history list
-  const [historyList, setHistoryList] = useState([
-    { id: 1, title: '온천천 시민 수질 측정 검증', date: '오늘 12:45', amount: '+1,000원', river: '온천천', icon: '🧪' },
-    { id: 2, title: '온천천 하천 산책 77보 완료', date: '오늘 11:20', amount: '+1,000원', river: '온천천', icon: '👣' },
-    { id: 3, title: '동천 수질 오염 현장 사진 제보', date: '어제 16:10', amount: '+1,000원', river: '동천', icon: '📸' },
-    { id: 4, title: '괴정천 맑은 물 관찰 제보', date: '8월 12일', amount: '+1,000원', river: '괴정천', icon: '🟢' },
-  ]);
 
   // My coupons
   const [coupons, setCoupons] = useState([
@@ -36,7 +27,7 @@ export default function BenefitsTab({ onShowToast }) {
       return;
     }
     const transferred = balance;
-    setBalance(0);
+    if (setBalance) setBalance(0);
     setShowExchangeModal(false);
     if (onShowToast) {
       onShowToast(`🎉 동백전 ${transferred.toLocaleString()}원이 부산 동백전 앱 지갑으로 즉시 전환되었습니다!`);
@@ -112,7 +103,7 @@ export default function BenefitsTab({ onShowToast }) {
       </div>
 
       {/* ======================================================== */}
-      {/* 1. 동백전 지갑 (잔액 + 적립 내역 + 동백전 페이 전환) */}
+      {/* 1. 동백전 지갑 (잔액 + 실시간 적립 내역 + 동백전 페이 전환) */}
       {/* ======================================================== */}
       {subTab === 'wallet' && (
         <div>
@@ -294,7 +285,7 @@ export default function BenefitsTab({ onShowToast }) {
 
       {/* 동백전 페이 전환 팝업 모달 */}
       {showExchangeModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zindex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ width: '100%', maxWidth: '340px', background: 'white', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#eff6ff', color: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
               <ArrowRightLeft size={28} />
@@ -323,7 +314,7 @@ export default function BenefitsTab({ onShowToast }) {
 
       {/* 쿠폰 QR 바코드 팝업 모달 */}
       {showQrModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zindex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ width: '100%', maxWidth: '340px', background: 'white', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '4px' }}>{showQrModal.title}</h3>
             <p style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '16px' }}>가게 직원에게 아래 QR 바코드를 보여주세요.</p>
