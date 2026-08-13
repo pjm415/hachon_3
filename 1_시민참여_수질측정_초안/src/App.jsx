@@ -370,7 +370,7 @@ export default function App() {
           </button>
         </header>
 
-        {/* 📲 휴대폰 바탕화면에 바로가기 앱 추가 안내 배너 */}
+        {/* 📲 안드로이드 화면에 앱 바로가기 만들기 안내 배너 */}
         {showPwaBanner && (
           <div style={{
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
@@ -387,8 +387,9 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '1.1rem' }}>📲</span>
               <div>
-                <span style={{ display: 'block', color: '#ffffff', fontWeight: 800 }}>휴대폰 바탕화면에 앱 아이콘 추가</span>
-                <span style={{ display: 'block', color: '#38bdf8', fontSize: '0.68rem', fontWeight: 700 }}>.mht 파일 저장 없이 바탕화면 바로가기 생성</span>
+                <span style={{ display: 'block', color: '#ffffff', fontWeight: 800, fontSize: '0.84rem' }}>
+                  안드로이드 화면에 앱 바로가기 만들기
+                </span>
               </div>
             </div>
 
@@ -436,11 +437,11 @@ export default function App() {
               </div>
 
               <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', marginBottom: '8px' }}>
-                휴대폰 바탕화면에 바로가기 앱 생성
+                안드로이드 화면에 앱 바로가기 만들기
               </h3>
 
               <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.4, marginBottom: '16px', fontWeight: 600 }}>
-                웹페이지 저장(.mht)이 아닌 <b>휴대폰 바탕화면에 바로가기 앱 아이콘</b>을 만드는 1초 방법입니다!
+                스마트폰 바탕화면에 리버로그 앱 아이콘을 생성하는 방법입니다!
               </p>
 
               <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'left', marginBottom: '18px', fontSize: '0.8rem', color: '#1e293b' }}>
