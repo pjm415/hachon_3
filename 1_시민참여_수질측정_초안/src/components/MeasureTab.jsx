@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
-import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle } from 'lucide-react';
+import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle, Info } from 'lucide-react';
 
 export default function MeasureTab({ onAddMeasurement }) {
   // 3 Sub-Tabs: 'public' (실시간 공공 측정) | 'citizen' (시민 키트 직접 측정) | 'results' (시민 측정 결과 모아보기)
-  const [subTab, setSubTab] = useState('citizen');
+  const [subTab, setSubTab] = useState('public');
   
   // Public sub-tab state
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
   const realtimeData = getStationWaterData(selectedStationId);
-  const { metrics, bodTrend24h } = realtimeData;
+  const { metrics, bodTrend24h, summaryText, gradeStyle } = realtimeData;
 
   // Citizen measurement 5-step flow state
   const [citizenStep, setCitizenStep] = useState('check_kit');
@@ -17,9 +17,9 @@ export default function MeasureTab({ onAddMeasurement }) {
   const [scanProgress, setScanProgress] = useState(0);
 
   // Filter for citizen results feed
-  const [resultFilter, setResultFilter] = useState('all'); // 'all', '2014A65', '2014A70', '2014A85'
+  const [resultFilter, setResultFilter] = useState('all');
 
-  // Citizen measurements data list (rented devices & vending machine kits)
+  // Citizen measurements data list
   const [citizenResults, setCitizenResults] = useState([
     {
       id: 101,
@@ -44,7 +44,7 @@ export default function MeasureTab({ onAddMeasurement }) {
       deviceType: '무인 자판기 1회용 발색 시약 키트',
       author: '최진아 (시민기자)',
       time: '35분 전',
-      bod: '3.2 ppm',
+      bod: '2.8 ppm',
       ph: '6.8',
       doVal: '7.2 mg/L',
       grade: '2급수 (보통)',
@@ -59,11 +59,11 @@ export default function MeasureTab({ onAddMeasurement }) {
       deviceType: '지정 카페 대여 센서 (동백가게)',
       author: '조성하 (봉사단)',
       time: '1시간 전',
-      bod: '1.8 ppm',
-      ph: '7.4',
-      doVal: '8.8 mg/L',
-      grade: '1급수 (우수)',
-      status: 'good',
+      bod: '4.2 ppm',
+      ph: '6.6',
+      doVal: '6.5 mg/L',
+      grade: '3급수 (위험)',
+      status: 'danger',
       hash: '0x9a1b...55f2'
     }
   ]);
@@ -189,7 +189,7 @@ export default function MeasureTab({ onAddMeasurement }) {
       </div>
 
       {/* ======================================================== */}
-      {/* SUB-TAB 1: 실시간 공공 측정 정보 (Open API Key 연동) */}
+      {/* SUB-TAB 1: 실시간 공공 측정 정보 (수질 위험도 색상 + 시민 1문장 요약) */}
       {/* ======================================================== */}
       {subTab === 'public' && (
         <div>
@@ -215,38 +215,53 @@ export default function MeasureTab({ onAddMeasurement }) {
             ))}
           </div>
 
-          {/* Integrated Grade Card */}
+          {/* Integrated Grade Card with Dynamic Risk Gradient Color & Citizen One-Sentence Summary */}
           <div style={{
-            background: 'linear-gradient(135deg, #1677ff 0%, #0958d9 100%)',
+            background: gradeStyle.bg,
             color: 'white',
             padding: '20px',
-            borderRadius: '20px',
+            borderRadius: '24px',
             marginBottom: '14px',
-            boxShadow: '0 10px 24px rgba(22, 119, 255, 0.3)'
+            boxShadow: '0 12px 28px rgba(0, 0, 0, 0.25)',
+            transition: 'background 0.3s ease'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
+              <span style={{ background: 'rgba(255,255,255,0.22)', padding: '4px 12px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 800 }}>
                 📍 {realtimeData.stationName}
               </span>
-              <span style={{ fontSize: '0.72rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <ShieldCheck size={14} /> 국립환경과학원 연동
+              <span style={{ fontSize: '0.72rem', background: 'rgba(0,0,0,0.25)', padding: '3px 8px', borderRadius: '10px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {gradeStyle.tagText}
               </span>
             </div>
 
-            <div style={{ fontSize: '0.82rem', opacity: 0.9 }}>통합 수질 지표 평가</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, margin: '4px 0 10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ fontSize: '0.82rem', opacity: 0.9 }}>통합 수질 위험도 평가</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 900, margin: '4px 0 12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Droplet size={28} /> {metrics.grade.value}
             </div>
 
-            <div style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.15)', padding: '8px 12px', borderRadius: '10px' }}>
-              공공데이터포털 API 실시간 데이터 연동 완료
+            {/* Replaced '공공데이터포털 API 실시간 데이터 연동 완료' with User Requested Citizen One-Sentence Water Summary */}
+            <div style={{
+              fontSize: '0.82rem',
+              background: 'rgba(255, 255, 255, 0.18)',
+              backdropFilter: 'blur(8px)',
+              padding: '12px 14px',
+              borderRadius: '14px',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              lineHeight: 1.5,
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px'
+            }}>
+              <Info size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>{summaryText}</div>
             </div>
           </div>
 
           {/* Metric Details Cards */}
           <div style={{ background: 'white', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0', marginBottom: '14px' }}>
             <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: '#0f172a' }}>
-              <Activity size={16} color="#1677ff" /> {realtimeData.river} 실시간 공공 측정 지표
+              <Activity size={16} color="#1677ff" /> {realtimeData.river} 실시간 공공 측정 지표 (BOD, DO, pH, TDS, 수온)
             </h4>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '10px' }}>
@@ -500,7 +515,7 @@ export default function MeasureTab({ onAddMeasurement }) {
       )}
 
       {/* ======================================================== */}
-      {/* SUB-TAB 3: 시민 측정 결과 모아보기 (Dedicated Sub-Tab view) */}
+      {/* SUB-TAB 3: 시민 측정 결과 모아보기 */}
       {/* ======================================================== */}
       {subTab === 'results' && (
         <div style={{ background: 'white', padding: '18px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '40px' }}>
@@ -559,7 +574,7 @@ export default function MeasureTab({ onAddMeasurement }) {
                     📍 [{item.river}] {item.location}
                   </div>
                 </div>
-                <span style={{ fontSize: '0.75rem', background: item.status === 'good' ? '#d1fae5' : '#fef2f2', color: item.status === 'good' ? '#065f46' : '#991b1b', padding: '4px 10px', borderRadius: '12px', fontWeight: 800 }}>
+                <span style={{ fontSize: '0.75rem', background: item.status === 'good' ? '#d1fae5' : item.status === 'warning' ? '#fffbe8' : '#fef2f2', color: item.status === 'good' ? '#065f46' : item.status === 'warning' ? '#b45309' : '#991b1b', padding: '4px 10px', borderRadius: '12px', fontWeight: 800 }}>
                   {item.grade}
                 </span>
               </div>
