@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Compass, Crosshair } from 'lucide-react';
 import { BUSAN_RIVER_STATIONS } from '../api/waterQualityApi';
 
+// 부산 주요 하천 정밀 GPS 좌표 매핑 (괴정천 하굿둑 지점: 부산 사하구 하단동 괴정천 수문/하구 채널 정밀 좌표)
 const STATION_COORDS = {
   '2014A65': { lat: 35.1970, lng: 129.0835, river: '온천천', station: '세병교 지점' },
   '2014A70': { lat: 35.1432, lng: 129.0625, river: '동천', station: '범일교 지점' },
-  '2014A85': { lat: 35.0985, lng: 128.9680, river: '괴정천', station: '하굿둑 지점' }
+  '2014A85': { lat: 35.1042, lng: 128.9658, river: '괴정천', station: '하굿둑 지점' }
 };
 
 export default function HomeTab({ selectedStationId, setSelectedStationId, records, onSelectPhotoPin }) {
@@ -47,8 +48,8 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
         if (records && records.length > 0) {
           records.forEach((rec, idx) => {
             if (rec.riverId === selectedStationId) {
-              const lat = coords.lat + ((idx % 3) * 0.001 - 0.0008);
-              const lng = coords.lng + (Math.floor(idx / 3) * 0.0015 - 0.0007);
+              const lat = coords.lat + ((idx % 3) * 0.0006 - 0.0004);
+              const lng = coords.lng + (Math.floor(idx / 3) * 0.0008 - 0.0004);
 
               const overlayDiv = document.createElement('div');
               overlayDiv.className = 'photo-pin-wrapper';
@@ -105,7 +106,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
       {/* Floating Compass */}
       <button 
         className="floating-compass" 
-        onClick={() => alert(`🧭 ${currentCoords.river} 방향 북위 35° / 동경 129°`)}
+        onClick={() => alert(`🧭 ${currentCoords.river} 방향 북위 35° / 동경 128°`)}
         title="방위각 보기"
       >
         <Compass size={22} />
@@ -117,7 +118,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
       {/* Floating Target Location */}
       <button 
         className="floating-target" 
-        onClick={() => alert(`📍 내 위치: ${currentCoords.river} ${currentCoords.station} 근처입니다.`)}
+        onClick={() => alert(`📍 내 위치: ${currentCoords.river} ${currentCoords.station} (부산 사하구 하단동 괴정천 수문)`)}
         title="내 위치 찾기"
       >
         <Crosshair size={24} />
