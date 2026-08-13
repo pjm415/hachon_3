@@ -5,8 +5,7 @@ import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityAp
 const STATION_COORDS = {
   '2014A65': { lat: 35.1970, lng: 129.0835, river: '온천천', station: '세병교 지점' },
   '2014A70': { lat: 35.1432, lng: 129.0625, river: '동천', station: '범일교 지점' },
-  '2014A85': { lat: 35.0985, lng: 128.9680, river: '괴정천', station: '하굿둑 지점' },
-  '2014IMHA': { lat: 35.1634, lng: 129.1623, river: '임하천', station: '동백교 지점' }
+  '2014A85': { lat: 35.0985, lng: 128.9680, river: '괴정천', station: '하굿둑 지점' }
 };
 
 const SAMPLE_RECORDS = [
@@ -14,7 +13,7 @@ const SAMPLE_RECORDS = [
   { id: 2, type: 'negative', tag: '오염 제보', text: '동천 범일교 하구 약간의 유류 띠 발견됨', author: '최진아 (시민기자)', time: '25분 전', photo: 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=400&q=80' },
   { id: 3, type: 'positive', tag: '수질 측정', text: 'DO 용존산소 9.2mg/L로 매우 우수 평가', author: '기점수 (측정단)', time: '40분 전', photo: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=400&q=80' },
   { id: 4, type: 'positive', tag: '줍깅 활동', text: '괴정천 하구 하천 변 플라스틱 쓰레기 5kg 수거', author: '조성하 (봉사단)', time: '1시간 전', photo: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=400&q=80' },
-  { id: 5, type: 'negative', tag: '거품 발생', text: '임하천 동백교 상류 미세 흰 거품 관찰', author: '최풍림 (지킴이)', time: '2시간 전', photo: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=400&q=80' },
+  { id: 5, type: 'negative', tag: '거품 발생', text: '동천 범일교 상류 미세 흰 거품 관찰', author: '최풍림 (지킴이)', time: '2시간 전', photo: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=400&q=80' },
 ];
 
 export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
@@ -84,7 +83,7 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
 
   return (
     <div className="home-tab">
-      {/* 1. River Selection Tabs (River Tabs matching ohjiwon/riverlog) */}
+      {/* 1. River Selection Tabs */}
       <div className="river-tabs" id="riverTabs">
         {BUSAN_RIVER_STATIONS.map((st) => (
           <button
@@ -97,7 +96,7 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
         ))}
       </div>
 
-      {/* 2. Map View Container matching ohjiwon/riverlog */}
+      {/* 2. Map View Container */}
       <div className="map-view">
         {/* River Name Pill */}
         <div className="river-name-pill">
@@ -113,8 +112,8 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
         {/* Map Legend */}
         <div className="map-legend">
           <span className="legend-item"><i className="dot tag-positive"></i>긍정 기록</span>
-          <span className="legend-item"><i className="dot tag-negative"></i>부정 기록</span>
-          <span className="legend-item"><i className="dot dot-me"></i>내 위치</span>
+          <span className="legend-item"><i class="dot tag-negative"></i>부정 기록</span>
+          <span className="legend-item"><i class="dot dot-me"></i>내 위치</span>
         </div>
 
         {/* Locate Button */}
@@ -123,7 +122,7 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
         </button>
       </div>
 
-      {/* 3. Realtime Water Quality Metrics (Public Water Quality API Preserved) */}
+      {/* 3. Realtime Water Quality Metrics */}
       <div style={{ padding: '16px 16px 0' }}>
         <div className="card" style={{
           background: selectedStationId === '2014A70' || selectedStationId === '2014A85'
@@ -200,11 +199,11 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
         </button>
       </div>
 
-      {/* 4. Preview Dock matching ohjiwon/riverlog */}
+      {/* 4. Preview Dock */}
       <section className="preview-dock">
         <div className="preview-dock-head">
           <span>주변 사람들의 기록</span>
-          <span className="preview-count">8건</span>
+          <span className="preview-count">5건</span>
         </div>
         <div className="strip">
           {SAMPLE_RECORDS.map((item) => (
@@ -223,7 +222,7 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
         </div>
       </section>
 
-      {/* 5. BottomSheet Modal matching ohjiwon/riverlog */}
+      {/* 5. BottomSheet Modal */}
       <div 
         className={`sheet-backdrop ${selectedRecord ? 'show' : ''}`}
         onClick={() => setSelectedRecord(null)}

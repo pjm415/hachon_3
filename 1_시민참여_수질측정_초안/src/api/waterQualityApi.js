@@ -7,12 +7,11 @@
 // 사용자 제공 공공데이터포털 서비스키
 export const PUBLIC_API_KEY = "5Nt4H72FqfklJ0ffWhjIXyI3Nsf2qLRUPh08YcoXu3XXju2NpKcseIiLXQRr%2BvIkncQyEQIM6mMyj%2F%2BIc6CqEw%3D%3D";
 
-// 부산 주요 하천 공공데이터포털 실제 관측소 매핑
+// 부산 주요 하천 공공데이터포털 실제 관측소 매핑 (온천천, 동천, 괴정천)
 export const BUSAN_RIVER_STATIONS = [
   { id: '2014A65', name: '온천천 (세병교 지점)', river: '온천천', defaultBod: 1.8, defaultDo: 9.2, defaultPh: 7.3, defaultTds: 135, temp: 18.2 },
   { id: '2014A70', name: '동천 (범일교 지점)', river: '동천', defaultBod: 3.5, defaultDo: 7.1, defaultPh: 6.8, defaultTds: 210, temp: 19.1 },
-  { id: '2014A85', name: '괴정천 (하굿둑 지점)', river: '괴정천', defaultBod: 4.2, defaultDo: 6.5, defaultPh: 6.6, defaultTds: 285, temp: 19.5 },
-  { id: '2014IMHA', name: '임하천 (동백교 지점)', river: '임하천', defaultBod: 1.4, defaultDo: 9.5, defaultPh: 7.2, defaultTds: 124, temp: 17.8 }
+  { id: '2014A85', name: '괴정천 (하굿둑 지점)', river: '괴정천', defaultBod: 4.2, defaultDo: 6.5, defaultPh: 6.6, defaultTds: 285, temp: 19.5 }
 ];
 
 /**
