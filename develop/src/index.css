@@ -194,7 +194,7 @@ body {
   cursor: pointer;
 }
 
-/* Map Photo Thumbnail Pins matching user screenshot */
+/* Map Photo Pins */
 .photo-pin-wrapper {
   position: relative;
   cursor: pointer;
@@ -264,34 +264,72 @@ body {
   margin-top: -1px;
 }
 
-/* Bottom Nav in Figma Frame 3 */
-.bottom-nav-figma {
-  height: 72px;
-  background: #eef2ff;
-  display: flex;
+/* Clean White Bottom Nav matching user's screenshot (Blue Theme) */
+.bottom-nav-clean {
+  height: 76px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   align-items: center;
-  justify-content: center;
   position: relative;
   flex-shrink: 0;
   z-index: 50;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
 }
 
-.center-walk-btn-figma {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #1677ff;
-  color: #ffffff;
-  border: none;
+.nav-tab-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  font-weight: 800;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: #64748b;
   font-size: 0.72rem;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(22, 119, 255, 0.4);
+  transition: all 0.15s ease;
+}
+
+.nav-tab-item.is-active {
+  color: #1677ff;
+  font-weight: 800;
+}
+
+.nav-tab-item.is-active svg {
+  stroke: #1677ff;
+}
+
+.nav-center-circle-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.center-walk-big-btn {
+  position: absolute;
+  top: -24px;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #1677ff;
+  color: #ffffff;
+  border: 4px solid #ffffff;
+  box-shadow: 0 6px 18px rgba(22, 119, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.center-walk-big-btn:active {
+  transform: scale(0.92);
 }
 
 /* Figma "산책중 화면" Screen */
@@ -453,7 +491,7 @@ body {
   margin-top: 16px;
 }
 
-/* Feed Drawer / Modal matching user requirement */
+/* Feed Drawer / Modal */
 .feed-drawer-backdrop {
   position: absolute;
   inset: 0;

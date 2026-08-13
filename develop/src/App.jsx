@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HomeTab from './components/HomeTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Bell, Camera, Pause, Footprints, Sparkles, X, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2 } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2 } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -13,6 +13,7 @@ const INITIAL_RECORDS = [
 ];
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('home'); // 'home' shows map
   const [selectedStationId, setSelectedStationId] = useState('2014A65'); // Default: 온천천
   const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
@@ -58,7 +59,7 @@ export default function App() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 3500);
+    }, 3000);
   };
 
   // Open Feed Drawer when a photo pin is clicked
@@ -137,12 +138,14 @@ export default function App() {
 
         {/* 1. Top Header Bar */}
         <header className="topbar">
-          <div className="brand">
+          <div className="brand" onClick={() => setActiveTab('home')} style={{ cursor: 'pointer' }}>
             <span className="brand-name">리버로그</span>
             <span 
               className="brand-badge" 
-              style={{ cursor: 'pointer' }}
-              onClick={() => setShowFeedDrawer(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowFeedDrawer(true);
+              }}
             >
               시민 리버 피드 📸
             </span>
@@ -178,18 +181,58 @@ export default function App() {
           onSelectPhotoPin={handleSelectPhotoPin}
         />
 
-        {/* 4. Bottom Navigation Bar */}
-        <nav className="bottom-nav-figma">
+        {/* 4. Bottom Navigation Bar matching user's exact screenshot layout (Blue Theme) */}
+        <nav className="bottom-nav-clean">
+          {/* Tab 1: 홈 (Home) */}
           <button 
-            className="center-walk-btn-figma"
-            onClick={() => {
-              setIsWalking(true);
-              setWalkSeconds(0);
-              setWalkSteps(77);
-            }}
+            className={`nav-tab-item ${activeTab === 'home' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('home')}
           >
-            <Footprints size={24} />
-            <span>산책하기</span>
+            <Home size={22} />
+            <span>홈</span>
+          </button>
+
+          {/* Tab 2: 수질 측정 */}
+          <button 
+            className="nav-tab-item"
+            onClick={() => showNotification("🧪 수질 측정 기능은 아직 준비 중입니다.")}
+          >
+            <Droplets size={22} />
+            <span>수질 측정</span>
+          </button>
+
+          {/* Tab 3: 산책하기 (Center BIG Floating Circle Button) */}
+          <div className="nav-center-circle-wrapper">
+            <button 
+              className="center-walk-big-btn"
+              onClick={() => {
+                setIsWalking(true);
+                setWalkSeconds(0);
+                setWalkSteps(77);
+              }}
+              title="산책 시작"
+            >
+              <Footprints size={28} />
+            </button>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#1677ff', marginTop: '36px' }}>산책하기</span>
+          </div>
+
+          {/* Tab 4: 혜택 */}
+          <button 
+            className="nav-tab-item"
+            onClick={() => showNotification("🎁 혜택 기능은 아직 준비 중입니다.")}
+          >
+            <Gift size={22} />
+            <span>혜택</span>
+          </button>
+
+          {/* Tab 5: 마이페이지 */}
+          <button 
+            className="nav-tab-item"
+            onClick={() => showNotification("👤 마이페이지 기능은 아직 준비 중입니다.")}
+          >
+            <User size={22} />
+            <span>마이페이지</span>
           </button>
         </nav>
 
@@ -237,7 +280,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 6. Citizen River Photo Feed Modal (Triggered by clicking ANY photo pin on map) */}
+        {/* 6. Citizen River Photo Feed Modal */}
         {showFeedDrawer && (
           <div className="feed-drawer-backdrop" onClick={() => setShowFeedDrawer(false)}>
             <div className="feed-drawer" onClick={e => e.stopPropagation()}>
@@ -253,7 +296,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Feed Card Items */}
               {currentRiverRecords.map((item) => (
                 <div key={item.id} className="feed-item-card">
                   <div className="feed-item-header">
