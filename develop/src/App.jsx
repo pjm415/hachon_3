@@ -4,7 +4,7 @@ import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
 import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, MapPin, Download } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, MapPin, Download, Smartphone } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -34,9 +34,10 @@ export default function App() {
   const [dongbaekBalance, setDongbaekBalance] = useState(4000);
   const [dongbaekHistory, setDongbaekHistory] = useState(INITIAL_HISTORY);
 
-  // PWA App Installation Prompt State
+  // PWA App Installation Prompt State & Guide Modal
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPwaBanner, setShowPwaBanner] = useState(true);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   // Real-time HTML5 GPS Location State
   const [userGpsLocation, setUserGpsLocation] = useState(null);
@@ -77,16 +78,21 @@ export default function App() {
 
   const handleInstallPwa = async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === 'accepted') {
-        showNotification("🎉 리버로그 앱이 스마트폰 홈 화면에 정상 설치되었습니다!");
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          showNotification("🎉 리버로그 앱 바로가기가 휴대폰 바탕화면에 추가되었습니다!");
+        }
+        setDeferredPrompt(null);
+        setShowPwaBanner(false);
+        return;
+      } catch (err) {
+        console.warn("Native prompt failed, fallback to guide modal:", err);
       }
-      setDeferredPrompt(null);
-      setShowPwaBanner(false);
-    } else {
-      alert("📱 스마트폰 크롬 브라우저 우측 상단 메뉴(⋮) ➔ '앱 설치' 또는 '홈 화면에 추가'를 누르시면 안드로이드 정식 앱으로 다운로드/설치됩니다!");
     }
+    // Show step-by-step visual guide modal
+    setShowGuideModal(true);
   };
 
   // Fetch Real-Time HTML5 GPS Location
@@ -364,7 +370,7 @@ export default function App() {
           </button>
         </header>
 
-        {/* 📱 안드로이드 앱 스마트폰 설치 유도 배너 */}
+        {/* 📲 휴대폰 바탕화면에 바로가기 앱 추가 안내 배너 */}
         {showPwaBanner && (
           <div style={{
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
@@ -379,10 +385,10 @@ export default function App() {
             zIndex: 110
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.1rem' }}>📱</span>
+              <span style={{ fontSize: '1.1rem' }}>📲</span>
               <div>
-                <span style={{ display: 'block', color: '#ffffff', fontWeight: 800 }}>리버로그 앱 스마트폰 설치</span>
-                <span style={{ display: 'block', color: '#94a3b8', fontSize: '0.68rem', fontWeight: 600 }}>안드로이드 바탕화면에 앱 아이콘 추가</span>
+                <span style={{ display: 'block', color: '#ffffff', fontWeight: 800 }}>휴대폰 바탕화면에 앱 아이콘 추가</span>
+                <span style={{ display: 'block', color: '#38bdf8', fontSize: '0.68rem', fontWeight: 700 }}>.mht 파일 저장 없이 바탕화면 바로가기 생성</span>
               </div>
             </div>
 
@@ -398,10 +404,11 @@ export default function App() {
                   fontSize: '0.74rem',
                   fontWeight: 800,
                   cursor: 'pointer',
-                  boxShadow: '0 4px 10px rgba(22, 119, 255, 0.3)'
+                  boxShadow: '0 4px 10px rgba(22, 119, 255, 0.3)',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                앱 설치
+                바탕화면에 추가
               </button>
               <button
                 onClick={() => setShowPwaBanner(false)}
@@ -415,6 +422,54 @@ export default function App() {
                 }}
               >
                 ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 📲 바탕화면 바로가기 생성 1초 완료 안내 팝업 모달 */}
+        {showGuideModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '24px', padding: '24px', width: '100%', maxWidth: '340px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
+              <div style={{ width: '54px', height: '54px', borderRadius: '50%', background: '#eff6ff', color: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: '1.6rem', fontWeight: 900 }}>
+                📱
+              </div>
+
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', marginBottom: '8px' }}>
+                휴대폰 바탕화면에 바로가기 앱 생성
+              </h3>
+
+              <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.4, marginBottom: '16px', fontWeight: 600 }}>
+                웹페이지 저장(.mht)이 아닌 <b>휴대폰 바탕화면에 바로가기 앱 아이콘</b>을 만드는 1초 방법입니다!
+              </p>
+
+              <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'left', marginBottom: '18px', fontSize: '0.8rem', color: '#1e293b' }}>
+                <div style={{ fontWeight: 800, color: '#1677ff', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Smartphone size={16} /> 안드로이드 크롬 / 삼성 인터넷:
+                </div>
+                <div style={{ fontWeight: 700, lineHeight: 1.6 }}>
+                  1️⃣ 화면 오른쪽 상단 <b>메뉴 버튼(⋮ 또는 ☰)</b> 터치<br/>
+                  2️⃣ <b>[홈 화면에 추가]</b> 또는 <b>[앱 설치]</b> 선택<br/>
+                  3️⃣ <b>추가</b> 터치 ➔ <b>바탕화면에 아이콘 즉시 생성!</b>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowGuideModal(false)}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #1677ff, #0958d9)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '14px',
+                  borderRadius: '16px',
+                  fontSize: '0.92rem',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 16px rgba(22, 119, 255, 0.3)'
+                }}
+              >
+                확인했습니다! 👍
               </button>
             </div>
           </div>
