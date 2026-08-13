@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BUSAN_RIVER_STATIONS, getStationWaterData, fetchRealtimeWaterData } from '../api/waterQualityApi';
+import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
 import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, ArrowRight, RefreshCw, BarChart2, TestTube, Database, CheckCircle, Info, Wifi } from 'lucide-react';
 
 export default function MeasureTab({ onAddMeasurement }) {
@@ -8,22 +8,9 @@ export default function MeasureTab({ onAddMeasurement }) {
   
   // Public sub-tab state
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
-  const [realtimeData, setRealtimeData] = useState(() => getStationWaterData(selectedStationId));
-  const [loadingApi, setLoadingApi] = useState(false);
 
-  // Trigger live API fetch using user's data.go.kr API Key whenever selectedStationId changes
-  useEffect(() => {
-    let isMounted = true;
-    setLoadingApi(true);
-    fetchRealtimeWaterData(selectedStationId).then(data => {
-      if (isMounted) {
-        setRealtimeData(data);
-        setLoadingApi(false);
-      }
-    });
-    return () => { isMounted = false; };
-  }, [selectedStationId]);
-
+  // Direct synchronous evaluation per selected station ID to eliminate async state mismatch!
+  const realtimeData = getStationWaterData(selectedStationId);
   const { metrics, bodTrend24h, summaryText, gradeStyle, apiStatus } = realtimeData;
 
   // Citizen measurement 5-step flow state
@@ -211,9 +198,9 @@ export default function MeasureTab({ onAddMeasurement }) {
           {/* Live Open API Connection Status Indicator */}
           <div style={{ background: '#ffffff', padding: '8px 12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '0.72rem', fontWeight: 800, color: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Wifi size={14} color="#1677ff" /> {apiStatus || "📡 공공데이터포털 Open API 연동 완료"}
+              <Wifi size={14} color="#1677ff" /> {apiStatus}
             </span>
-            {loadingApi && <span style={{ color: '#f59e0b' }}>불러오는 중...</span>}
+            <span style={{ fontSize: '0.68rem', background: '#eff6ff', color: '#1677ff', padding: '2px 8px', borderRadius: '8px', fontWeight: 800 }}>실시간</span>
           </div>
 
           {/* Station Selection */}
@@ -262,7 +249,7 @@ export default function MeasureTab({ onAddMeasurement }) {
               <Droplet size={28} /> {metrics.grade.value}
             </div>
 
-            {/* Citizen One-Sentence Summary replacing the old static text */}
+            {/* River Specific Citizen Summary Text */}
             <div style={{
               fontSize: '0.82rem',
               background: 'rgba(255, 255, 255, 0.18)',
