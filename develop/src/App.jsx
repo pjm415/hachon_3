@@ -4,7 +4,7 @@ import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
 import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, Activity, Coins } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -89,7 +89,6 @@ export default function App() {
   };
 
   // 1. STRICT PHYSICAL MOTION PEDOMETER ONLY (DeviceMotionEvent)
-  // Step count increases strictly when physical body motion is detected!
   useEffect(() => {
     if (!isWalking) return;
 
@@ -213,8 +212,8 @@ export default function App() {
 
   const currentRiverRecords = records.filter(r => r.riverId === selectedStationId);
 
-  // 10보당 1원 적립 계산기 (User requested: 10보당 1원)
-  const earnedDongbaek = Math.floor(walkSteps / 10);
+  // 10보당 1원 적립 (두자리수 포맷ting)
+  const earnedDongbaek = Math.floor(walkSteps / 10).toString().padStart(2, '0');
 
   return (
     <div className="stage">
@@ -366,14 +365,9 @@ export default function App() {
           </button>
         </nav>
 
-        {/* 5. Active Walking Screen displaying 10보당 1원 동백전 적립 */}
+        {/* 5. Active Walking Screen matching user screenshot design exactly */}
         {isWalking && (
           <div className="walking-screen">
-            <div style={{ background: 'rgba(255,255,255,0.22)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Activity size={14} color="#10b981" />
-              📱 10보 당 동백전 1원 실시간 적립 중
-            </div>
-
             <div className="walking-timer">
               {formatTimer(walkSeconds)}
             </div>
@@ -388,28 +382,27 @@ export default function App() {
                 {walkSteps.toLocaleString()}보
               </div>
 
-              {/* Real-time 10보 당 1원 Dongbaekjeon Pay Reward Banner */}
+              {/* Clean Light Blue Pill Banner matching user screenshot exactly (No emojis, no top extra banner) */}
               <div style={{
-                fontSize: '0.92rem',
-                fontWeight: 900,
-                color: '#3c1e1e',
-                background: '#fee500',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                marginTop: '10px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
+                background: '#f0f7ff',
+                color: '#475569',
+                fontSize: '0.86rem',
+                fontWeight: 700,
+                padding: '12px 24px',
+                borderRadius: '50px',
+                marginTop: '16px',
+                marginBottom: '16px',
+                display: 'inline-block',
+                border: '1px solid #e0f2fe'
               }}>
-                <Coins size={18} color="#3c1e1e" />
-                적립 동백전: <b>{earnedDongbaek.toLocaleString()}원</b> (10보당 1원)
+                적립 동백전 : {earnedDongbaek}원 (10보당 1원)
               </div>
 
-              <Footprints className="walking-footprint-icon" size={64} style={{ marginTop: '12px' }} />
+              <Footprints className="walking-footprint-icon" size={64} style={{ color: '#1677ff', margin: '0 auto' }} />
             </div>
 
             <div className="walking-bottom-actions">
+              {/* Clicking Upload triggers Real WebRTC Camera directly */}
               <button 
                 className="walking-action-btn"
                 onClick={startWalkingCamera}
@@ -424,7 +417,7 @@ export default function App() {
                 className="walking-action-btn"
                 onClick={() => {
                   setIsWalking(false);
-                  showNotification(`🏅 ${currentStation.river} 산책 완료! 총 ${walkSteps.toLocaleString()}보 (${earnedDongbaek.toLocaleString()}원) 적립 완료!`);
+                  showNotification(`🏅 ${currentStation.river} 산책 완료! 총 ${walkSteps.toLocaleString()}보 (${earnedDongbaek}원) 적립 완료!`);
                 }}
               >
                 <div className="walking-action-circle">
