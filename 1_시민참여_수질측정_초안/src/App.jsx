@@ -5,11 +5,11 @@ import PloggingTab from './components/PloggingTab';
 import MerchantTab from './components/MerchantTab';
 import WalletTab from './components/WalletTab';
 import { initialWaterPins } from './mockData';
-import { Map, Camera, Award, Store, Wallet, Bell, Sparkles, Droplets } from 'lucide-react';
+import { Map, Camera, Award, Store, Wallet, Bell, Sparkles, Droplets, Rss, ShieldAlert } from 'lucide-react';
 import './index.css';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState('map'); // Default: 지도
   const [pins, setPins] = useState(initialWaterPins);
   const [totalEarned, setTotalEarned] = useState(0);
   const [historyItems, setHistoryItems] = useState([]);
@@ -47,7 +47,7 @@ export default function App() {
     setHistoryItems(prev => [
       {
         id: Date.now(),
-        title: "임하천 수질 측정 캐시백",
+        title: "하천 수질 측정 캐시백",
         date: "방금 전",
         amount: 1000,
         type: "earn",
@@ -80,127 +80,123 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div style={{
-          position: 'absolute',
-          top: '70px',
-          left: '16px',
-          right: '16px',
-          background: 'linear-gradient(135deg, #10b981, #059669)',
-          color: 'white',
-          padding: '12px 16px',
-          borderRadius: '16px',
-          boxShadow: '0 10px 20px rgba(16, 185, 129, 0.4)',
-          zIndex: 60,
-          fontWeight: 700,
-          fontSize: '0.85rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          animation: 'pulseGlow 1.5s infinite ease-in-out'
-        }}>
-          <Sparkles size={18} />
-          {toastMessage}
-        </div>
-      )}
+    <div className="stage">
+      <div className="app-shell">
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div style={{
+            position: 'absolute',
+            top: '64px',
+            left: '16px',
+            right: '16px',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            color: 'white',
+            padding: '12px 16px',
+            borderRadius: '16px',
+            boxShadow: '0 10px 20px rgba(16, 185, 129, 0.4)',
+            zIndex: 60,
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <Sparkles size={18} />
+            {toastMessage}
+          </div>
+        )}
 
-      {/* Top Header Bar */}
-      <header className="top-bar">
-        <div className="brand-logo" onClick={() => setActiveTab('home')} style={{ cursor: 'pointer' }}>
-          <Droplets size={24} color="#059669" />
-          <span>클린임하</span>
-          <span className="brand-badge">동백전 연동</span>
-        </div>
-        <div className="top-bar-actions">
-          <button className="icon-btn" title="알림">
+        {/* Top Bar matching ohjiwon/riverlog */}
+        <header className="topbar">
+          <div className="brand" onClick={() => setActiveTab('map')} style={{ cursor: 'pointer' }}>
+            <span className="brand-drop">💧</span>
+            <span className="brand-name">리버로그</span>
+          </div>
+          <button className="icon-btn" type="button" aria-label="알림" onClick={() => showNotification("🔔 온천천/동천 실시간 수질 데이터 정상 수신 중입니다.")}>
             <Bell size={20} />
           </button>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Tab Content */}
-      <main className="app-content">
-        {activeTab === 'home' && (
-          <HomeTab 
-            pins={pins} 
-            onNavigateTab={setActiveTab}
-            totalEarned={totalEarned}
-          />
-        )}
+        {/* Main View Area */}
+        <main className="app-content">
+          {(activeTab === 'map' || activeTab === 'feed') && (
+            <HomeTab 
+              pins={pins} 
+              onNavigateTab={setActiveTab}
+              totalEarned={totalEarned}
+            />
+          )}
 
-        {activeTab === 'measure' && (
-          <MeasureTab 
-            onAddMeasurement={handleAddMeasurement}
-          />
-        )}
+          {activeTab === 'measure' && (
+            <MeasureTab 
+              onAddMeasurement={handleAddMeasurement}
+            />
+          )}
 
-        {activeTab === 'plogging' && (
-          <PloggingTab 
-            onRegisterPlogging={handleRegisterPlogging}
-            isRegistered={isPloggingRegistered}
-          />
-        )}
+          {activeTab === 'plogging' && (
+            <PloggingTab 
+              onRegisterPlogging={handleRegisterPlogging}
+              isRegistered={isPloggingRegistered}
+            />
+          )}
 
-        {activeTab === 'merchant' && (
-          <MerchantTab 
-            onEarnCoupon={handleEarnCoupon}
-          />
-        )}
+          {activeTab === 'wallet' && (
+            <WalletTab 
+              totalEarned={totalEarned}
+              historyItems={historyItems}
+            />
+          )}
 
-        {activeTab === 'wallet' && (
-          <WalletTab 
-            totalEarned={totalEarned}
-            historyItems={historyItems}
-          />
-        )}
-      </main>
+          {activeTab === 'merchant' && (
+            <MerchantTab 
+              onEarnCoupon={handleEarnCoupon}
+            />
+          )}
+        </main>
 
-      {/* Bottom Navigation */}
-      <nav className="bottom-nav">
-        <button 
-          className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
-        >
-          <Map size={22} />
-          <span>수질지도</span>
-        </button>
+        {/* Bottom Navigation matching ohjiwon/riverlog 5-item structure */}
+        <nav className="bottom-nav">
+          <button 
+            className={`nav-item ${activeTab === 'feed' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('feed')}
+          >
+            <Rss size={20} />
+            <span>피드</span>
+          </button>
 
-        <button 
-          className={`nav-item ${activeTab === 'plogging' ? 'active' : ''}`}
-          onClick={() => setActiveTab('plogging')}
-        >
-          <Award size={22} />
-          <span>줍깅행사</span>
-        </button>
+          <button 
+            className={`nav-item ${activeTab === 'map' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('map')}
+          >
+            <Map size={20} />
+            <span>지도</span>
+          </button>
 
-        <button 
-          className={`nav-item measure-btn ${activeTab === 'measure' ? 'active' : ''}`}
-          onClick={() => setActiveTab('measure')}
-        >
-          <div className="btn-circle">
-            <Camera size={26} />
-          </div>
-          <span style={{ marginTop: '2px' }}>수질측정</span>
-        </button>
+          <button 
+            className={`nav-item ${activeTab === 'measure' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('measure')}
+          >
+            <Camera size={20} />
+            <span>측정</span>
+          </button>
 
-        <button 
-          className={`nav-item ${activeTab === 'merchant' ? 'active' : ''}`}
-          onClick={() => setActiveTab('merchant')}
-        >
-          <Store size={22} />
-          <span>대여/상권</span>
-        </button>
+          <button 
+            className={`nav-item ${activeTab === 'wallet' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('wallet')}
+          >
+            <Wallet size={20} />
+            <span>지갑</span>
+          </button>
 
-        <button 
-          className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`}
-          onClick={() => setActiveTab('wallet')}
-        >
-          <Wallet size={22} />
-          <span>동백전</span>
-        </button>
-      </nav>
+          <button 
+            className={`nav-item ${activeTab === 'merchant' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('merchant')}
+          >
+            <ShieldAlert size={20} />
+            <span>상황실</span>
+          </button>
+        </nav>
+      </div>
     </div>
   );
 }
