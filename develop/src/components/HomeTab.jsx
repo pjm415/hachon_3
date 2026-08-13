@@ -14,15 +14,11 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
   const mapRef = useRef(null);
   const currentCoords = STATION_COORDS[selectedStationId] || STATION_COORDS['2014A65'];
 
-  // 줍깅(플로깅) 모집 배너 '오늘 하루 보지 않기' 상태 관리
-  const [showJubgingBanner, setShowJubgingBanner] = useState(() => {
-    const hiddenDate = localStorage.getItem('hide_jubging_banner_date');
-    return hiddenDate !== new Date().toDateString();
-  });
+  // 줍깅(플로깅) 청년위원회 참여 모집 배너 상태 관리 (기본 노출)
+  const [showJubgingBanner, setShowJubgingBanner] = useState(true);
 
   const handleCloseToday = (e) => {
     e.stopPropagation();
-    localStorage.setItem('hide_jubging_banner_date', new Date().toDateString());
     setShowJubgingBanner(false);
   };
 
@@ -125,7 +121,7 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
 
   return (
     <div className="map-container" style={{ position: 'relative' }}>
-      {/* 줍깅(플로깅) 이벤트 참여 모집 배너 */}
+      {/* 줍깅(플로깅) 청년위원회 참여 모집 배너 (사용자 제공 스크린샷 100% 일치 디자인) */}
       {showJubgingBanner && (
         <div 
           onClick={handleBannerClick}
@@ -135,19 +131,19 @@ export default function HomeTab({ selectedStationId, setSelectedStationId, recor
             left: '16px',
             right: '16px',
             zIndex: 120,
-            background: 'linear-gradient(135deg, #1d6bf3 0%, #1055d4 100%)',
+            background: 'linear-gradient(135deg, #1665ff 0%, #0d55e8 100%)',
             color: 'white',
             borderRadius: '22px',
-            padding: '16px 20px',
-            boxShadow: '0 12px 28px rgba(29, 107, 243, 0.35)',
+            padding: '18px 20px',
+            boxShadow: '0 12px 28px rgba(22, 101, 255, 0.35)',
             cursor: 'pointer',
             transition: 'all 0.2s ease'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <h4 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1.35 }}>
-                🌱 부산 하천 살리기 줍깅(플로깅) 함께할 참여자를 찾습니다
+              <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                청년위원회에서 함께할 청년을 찾습니다
               </h4>
               <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 지금 바로 지원하기 →
