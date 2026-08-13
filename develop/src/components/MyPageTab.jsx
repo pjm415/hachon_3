@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User, Flame, Footprints, Camera, Heart, CheckCircle2, Mail, Edit3, Shield, Award, Calendar, LogOut } from 'lucide-react';
+import { User, Flame, Footprints, Camera, Heart, CheckCircle2, Mail, Edit3, Shield, Award, Calendar, LogOut, Download } from 'lucide-react';
 
-export default function MyPageTab({ onShowToast }) {
+export default function MyPageTab({ onShowToast, onInstallPwa }) {
   const [nickname, setNickname] = useState('부산하천지킴이_아린');
   const [isEditingNick, setIsEditingNick] = useState(false);
   const [newNickInput, setNewNickInput] = useState(nickname);
@@ -180,7 +180,8 @@ export default function MyPageTab({ onShowToast }) {
           border: '1px solid #e2e8f0',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px'
+          gap: '6px',
+          marginBottom: '12px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
@@ -207,6 +208,29 @@ export default function MyPageTab({ onShowToast }) {
             {stats.email}
           </div>
         </div>
+
+        {/* PWA Direct Download Button in Profile */}
+        <button
+          onClick={onInstallPwa}
+          style={{
+            width: '100%',
+            background: 'linear-gradient(135deg, #1677ff, #0958d9)',
+            color: 'white',
+            border: 'none',
+            padding: '12px',
+            borderRadius: '14px',
+            fontSize: '0.85rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 12px rgba(22, 119, 255, 0.3)'
+          }}
+        >
+          <Download size={18} /> 📱 리버로그 앱 다운로드 & 스마트폰 설치 (APK)
+        </button>
       </div>
 
       {/* 2. Cumulative Step Count & Walk Count Dashboard */}
@@ -234,7 +258,7 @@ export default function MyPageTab({ onShowToast }) {
         </div>
       </div>
 
-      {/* 3. Consecutive Attendance Streak (연속 출석) */}
+      {/* 3. Consecutive Attendance Streak */}
       <div style={{ background: 'white', padding: '18px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h4 style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -269,7 +293,7 @@ export default function MyPageTab({ onShowToast }) {
         </div>
       </div>
 
-      {/* 4. My Photo Gallery (내 사진 모아보기 기능) */}
+      {/* 4. My Photo Gallery */}
       <div style={{ background: 'white', padding: '18px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h4 style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -277,7 +301,6 @@ export default function MyPageTab({ onShowToast }) {
           </h4>
         </div>
 
-        {/* Photo Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {myPhotos.map((item) => (
             <div 

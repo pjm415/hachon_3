@@ -1,0 +1,30 @@
+{
+  "name": "리버로그 - 시민참여 수질 측정 & 동백전 리워드",
+  "short_name": "리버로그",
+  "description": "부산 주요 하천(온천천, 동천, 괴정천) 실시간 시민참여 수질 측정 및 동백전 혜택 플랫폼",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1677ff",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
