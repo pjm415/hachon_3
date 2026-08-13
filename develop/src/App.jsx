@@ -4,7 +4,7 @@ import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
 import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
-import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, Activity } from 'lucide-react';
+import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2, SwitchCamera, AlertCircle, X, Activity, Coins } from 'lucide-react';
 import './index.css';
 
 const INITIAL_RECORDS = [
@@ -89,13 +89,13 @@ export default function App() {
   };
 
   // 1. STRICT PHYSICAL MOTION PEDOMETER ONLY (DeviceMotionEvent)
-  // Disable automatic timer incrementing completely. Steps ONLY increase when physical movement occurs!
+  // Step count increases strictly when physical body motion is detected!
   useEffect(() => {
     if (!isWalking) return;
 
     let lastStepTime = 0;
-    const ACCELERATION_THRESHOLD = 12.8; // Physical motion threshold (m/s²). Lying still or holding still is ~9.8m/s², so it WON'T trigger!
-    const MIN_STEP_INTERVAL = 350; // Minimum time between human foot steps (ms)
+    const ACCELERATION_THRESHOLD = 12.8; // Physical motion threshold (m/s²)
+    const MIN_STEP_INTERVAL = 350; // Minimum time between foot steps (ms)
 
     const handleMotion = (event) => {
       const acc = event.accelerationIncludingGravity || event.acceleration;
@@ -107,14 +107,12 @@ export default function App() {
       const magnitude = Math.sqrt(x * x + y * y + z * z);
 
       const now = Date.now();
-      // Only count a step if physical movement exceeds threshold and min step interval
       if (magnitude > ACCELERATION_THRESHOLD && (now - lastStepTime > MIN_STEP_INTERVAL)) {
         lastStepTime = now;
         setWalkSteps(prev => prev + 1);
       }
     };
 
-    // Request Motion Sensor permission for iOS Safari & Android Chrome
     if (typeof window !== 'undefined' && window.DeviceMotionEvent) {
       if (typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
@@ -136,13 +134,12 @@ export default function App() {
     };
   }, [isWalking]);
 
-  // 2. Timer Effect (Increments duration ONLY. NEVER increments walkSteps!)
+  // 2. Timer Effect (Increments duration ONLY)
   useEffect(() => {
     let interval = null;
     if (isWalking) {
       interval = setInterval(() => {
         setWalkSeconds(prev => prev + 1);
-        // Step count is strictly NOT incremented by timer!
       }, 1000);
     } else {
       clearInterval(interval);
@@ -215,6 +212,9 @@ export default function App() {
   };
 
   const currentRiverRecords = records.filter(r => r.riverId === selectedStationId);
+
+  // 10보당 1원 적립 계산기 (User requested: 10보당 1원)
+  const earnedDongbaek = Math.floor(walkSteps / 10);
 
   return (
     <div className="stage">
@@ -366,12 +366,12 @@ export default function App() {
           </button>
         </nav>
 
-        {/* 5. Figma Active Walking Screen */}
+        {/* 5. Active Walking Screen displaying 10보당 1원 동백전 적립 */}
         {isWalking && (
           <div className="walking-screen">
             <div style={{ background: 'rgba(255,255,255,0.22)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Activity size={14} color="#10b981" />
-              📱 실제 스마트폰 보행 감지 시에만 걸음 수 측정
+              📱 10보 당 동백전 1원 실시간 적립 중
             </div>
 
             <div className="walking-timer">
@@ -382,14 +382,34 @@ export default function App() {
               <div className="walking-river-title">
                 {currentStation.river} 산책 중...
               </div>
+
+              {/* Step Counter */}
               <div className="walking-step-count">
-                {walkSteps}보
+                {walkSteps.toLocaleString()}보
               </div>
-              <Footprints className="walking-footprint-icon" size={72} />
+
+              {/* Real-time 10보 당 1원 Dongbaekjeon Pay Reward Banner */}
+              <div style={{
+                fontSize: '0.92rem',
+                fontWeight: 900,
+                color: '#3c1e1e',
+                background: '#fee500',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                marginTop: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
+              }}>
+                <Coins size={18} color="#3c1e1e" />
+                적립 동백전: <b>{earnedDongbaek.toLocaleString()}원</b> (10보당 1원)
+              </div>
+
+              <Footprints className="walking-footprint-icon" size={64} style={{ marginTop: '12px' }} />
             </div>
 
             <div className="walking-bottom-actions">
-              {/* Clicking Upload triggers Real WebRTC Camera directly */}
               <button 
                 className="walking-action-btn"
                 onClick={startWalkingCamera}
@@ -404,7 +424,7 @@ export default function App() {
                 className="walking-action-btn"
                 onClick={() => {
                   setIsWalking(false);
-                  showNotification(`🏅 ${currentStation.river} 산책 완료! 총 ${walkSteps}보 달성 (동백전 +1,000원 적립)`);
+                  showNotification(`🏅 ${currentStation.river} 산책 완료! 총 ${walkSteps.toLocaleString()}보 (${earnedDongbaek.toLocaleString()}원) 적립 완료!`);
                 }}
               >
                 <div className="walking-action-circle">
@@ -416,7 +436,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Real Live Hardware Camera Modal for Walking Screen */}
+        {/* Real Live Hardware Camera Modal */}
         {showRealCameraModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 350, display: 'flex', flexDirection: 'column', padding: '20px', color: 'white' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
