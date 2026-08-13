@@ -15,16 +15,18 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
   const { metrics, bodTrend24h } = realtimeData;
   const mapContainerRef = useRef(null);
 
-  // Kakao Map initialization & marker update per official guide
+  // Kakao Map initialization & marker update per official React/SPA guide
   useEffect(() => {
     const coords = STATION_COORDS[selectedStationId] || STATION_COORDS['2014A65'];
-    
-    const drawMap = () => {
-      if (!mapContainerRef.current || !window.kakao || !window.kakao.maps) return;
 
-      try {
+    const renderMap = () => {
+      if (!mapContainerRef.current) return;
+      if (!window.kakao || !window.kakao.maps) return;
+
+      window.kakao.maps.load(() => {
+        if (!mapContainerRef.current) return;
         const container = mapContainerRef.current;
-        container.innerHTML = ''; // Clear container
+        container.innerHTML = ''; // clear
 
         const options = {
           center: new window.kakao.maps.LatLng(coords.lat, coords.lng),
@@ -33,31 +35,29 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
 
         const map = new window.kakao.maps.Map(container, options);
         const markerPosition = new window.kakao.maps.LatLng(coords.lat, coords.lng);
-        
+
         const marker = new window.kakao.maps.Marker({
           position: markerPosition
         });
         marker.setMap(map);
 
-        // InfoWindow
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:4px 8px;font-size:12px;font-weight:bold;color:#0284c7;">📍 ${coords.name}</div>`
         });
         infowindow.open(map, marker);
-      } catch (err) {
-        console.warn("Kakao map loading...", err);
-      }
+      });
     };
 
     if (window.kakao && window.kakao.maps) {
-      if (window.kakao.maps.load) {
-        window.kakao.maps.load(drawMap);
-      } else {
-        drawMap();
-      }
+      renderMap();
     } else {
-      const timer = setTimeout(drawMap, 1000);
-      return () => clearTimeout(timer);
+      const timer = setInterval(() => {
+        if (window.kakao && window.kakao.maps) {
+          clearInterval(timer);
+          renderMap();
+        }
+      }, 300);
+      return () => clearInterval(timer);
     }
   }, [selectedStationId]);
 
