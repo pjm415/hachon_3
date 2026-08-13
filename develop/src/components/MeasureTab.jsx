@@ -1,200 +1,401 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, QrCode, ShieldAlert, CheckCircle2, Sparkles, Lock, RefreshCw } from 'lucide-react';
+import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
+import { Activity, Droplet, ShieldCheck, QrCode, Camera, CheckCircle2, Sparkles, Store, ArrowRight, RefreshCw, BarChart2, TestTube } from 'lucide-react';
 
 export default function MeasureTab({ onAddMeasurement }) {
-  const [step, setStep] = useState('select'); // 'select', 'scanning', 'result'
-  const [kitType, setKitType] = useState('single'); // 'single' or 'multi'
-  const [isScanning, setIsScanning] = useState(false);
+  // Two main Sub-Tabs: 'public' (실시간 공공 측정 정보) vs 'citizen' (시민 직접 키트 측정)
+  const [subTab, setSubTab] = useState('public');
+  
+  // Public sub-tab state
+  const [selectedStationId, setSelectedStationId] = useState('2014A65');
+  const realtimeData = getStationWaterData(selectedStationId);
+  const { metrics, bodTrend24h } = realtimeData;
+
+  // Citizen measurement 5-step flow state matching user specification image:
+  // Step 1: Start / Check Kit -> Step 2: Shop List & QR Rental -> Step 3: Camera Capture -> Step 4: AI Analysis -> Step 5: Save & Reward
+  const [citizenStep, setCitizenStep] = useState('check_kit'); // 'check_kit', 'shop_list', 'qr_rent', 'camera_scan', 'ai_analysis', 'result'
+  const [selectedShop, setSelectedShop] = useState(null);
   const [scanProgress, setScanProgress] = useState(0);
 
-  const startScan = (type) => {
-    setKitType(type);
-    setStep('scanning');
-    setIsScanning(true);
-    setScanProgress(0);
-  };
+  // Rental shop list for user specification image
+  const rentalShops = [
+    { id: 1, name: '온천천 시민 자원봉사센터', distance: '120m', location: '세병교 인근', stock: '여유 15개' },
+    { id: 2, name: '동천 마을 상회', distance: '340m', location: '범일교 앞', stock: '여유 8개' },
+    { id: 3, name: '괴정천 하구 동백가게', distance: '450m', location: '하굿둑 입구', stock: '여유 12개' },
+  ];
 
+  // AI Scan progress animation
   useEffect(() => {
     let timer;
-    if (isScanning && scanProgress < 100) {
+    if (citizenStep === 'ai_analysis' && scanProgress < 100) {
       timer = setTimeout(() => {
         setScanProgress(prev => prev + 25);
       }, 400);
-    } else if (scanProgress >= 100) {
-      setIsScanning(false);
-      setStep('result');
+    } else if (citizenStep === 'ai_analysis' && scanProgress >= 100) {
+      setCitizenStep('result');
       if (onAddMeasurement) {
         onAddMeasurement({
-          locationName: "임하천 중류 A구역 (동백교 하단)",
+          locationName: `${realtimeData.river} 측정 구역`,
           status: "good",
-          statusText: "1급수 (매우 좋음)",
-          bod: "1.4 ppm",
-          ph: "7.1",
-          turbidity: "맑음 (0.9 NTU)",
-          kitType: kitType === 'single' ? "자판기 1회용 시약 키트" : "지정카페 대여 다회용 센서"
+          statusText: "1급수 (우수)",
+          bod: "1.6 ppm",
+          ph: "7.2",
+          turbidity: "맑음 (0.8 NTU)"
         });
       }
     }
     return () => clearTimeout(timer);
-  }, [isScanning, scanProgress]);
+  }, [citizenStep, scanProgress, realtimeData]);
 
   return (
-    <div className="measure-tab" style={{ padding: '20px 16px' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <span className="badge badge-primary" style={{ marginBottom: '8px' }}>
-          <Lock size={12} /> 데이터 위·변조 방지 시스템 적용 중
-        </span>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800 }}>실시간 수질 측정 모듈</h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--gray-500)' }}>
-          갤러리 업로드가 금지되며 라이브 카메라와 GPS로 무결성을 입증합니다.
-        </p>
-      </div>
-
-      {/* STEP 1: Select Kit Type */}
-      {step === 'select' && (
-        <div>
-          <div className="card" style={{ padding: '20px', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ background: 'var(--primary-light)', color: 'var(--primary)', padding: '12px', borderRadius: '16px' }}>
-                <QrCode size={28} />
-              </div>
-              <div>
-                <span className="badge badge-success">상시 무료지급</span>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginTop: '4px' }}>1회용 시약 키트 측정</h3>
-              </div>
-            </div>
-            <p style={{ fontSize: '0.82rem', color: 'var(--gray-700)', marginBottom: '16px', lineHeight: 1.5 }}>
-              산책로 무인 자판기에서 수령한 1회용 시약 키트의 QR을 스캔하고 물에 적신 후 시약 색상을 스캔합니다.
-            </p>
-            <button className="btn-primary" onClick={() => startScan('single')}>
-              1회용 키트 바코드 스캔 시작
-            </button>
-          </div>
-
-          <div className="card" style={{ padding: '20px', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ background: 'var(--blue-light)', color: 'var(--blue)', padding: '12px', borderRadius: '16px' }}>
-                <Camera size={28} />
-              </div>
-              <div>
-                <span className="badge badge-primary">우리동네 카페 대여</span>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginTop: '4px' }}>다회용 정밀 센서 측정</h3>
-              </div>
-            </div>
-            <p style={{ fontSize: '0.82rem', color: 'var(--gray-700)', marginBottom: '16px', lineHeight: 1.5 }}>
-              지정 업소(카페)에서 대여한 디지털 센서의 LCD 화면 측정치를 스마트폰으로 직접 스캔합니다.
-            </p>
-            <button className="btn-secondary" onClick={() => startScan('multi')} style={{ background: 'var(--blue-light)', color: 'var(--blue)', border: '1px solid var(--blue)' }}>
-              다회용 센서 QR 스캔 시작
-            </button>
-          </div>
-
-          <div style={{ background: '#fef3c7', padding: '14px', borderRadius: '14px', border: '1px solid #fde047', fontSize: '0.78rem', color: '#854d0e', display: 'flex', gap: '8px' }}>
-            <ShieldAlert size={18} style={{ flexShrink: 0 }} />
-            <div>
-              <b>위변조 차단 정책:</b> 실시간 GPS 좌표(오차 3m 이내)와 시간 정보가 수질 데이터에 함께 영구 암호화됩니다.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 2: Live Camera Scan Simulation */}
-      {step === 'scanning' && (
-        <div style={{ background: '#000', borderRadius: '24px', overflow: 'hidden', position: 'relative', height: '480px', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '20px' }}>
-          {/* Top Camera Metadata */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span style={{ background: 'rgba(239, 68, 68, 0.8)', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }} className="pulse"></span> LIVE (갤러리 불가)
-              </span>
-              <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>
-                GPS 35.1634°N, 129.1623°E
-              </span>
-            </div>
-            <div style={{ fontSize: '0.75rem', textAlign: 'center', opacity: 0.9 }}>
-              {kitType === 'single' ? '시약 종이와 표준 색상 카드를 사각형에 맞추세요' : '디지털 센서 LCD 화면을 정면에 맞추세요'}
-            </div>
-          </div>
-
-          {/* Camera Frame Overlay */}
-          <div style={{
-            position: 'relative',
-            height: '240px',
-            border: '2px dashed #10b981',
-            borderRadius: '16px',
-            margin: '0 10px',
+    <div style={{ padding: '16px 16px 80px', background: '#f8fafc', minHeight: '100%' }}>
+      {/* 2 Sub-Tabs Header Navigation */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: '#e2e8f0', padding: '4px', borderRadius: '14px', marginBottom: '16px' }}>
+        <button
+          onClick={() => setSubTab('public')}
+          style={{
+            padding: '10px',
+            borderRadius: '10px',
+            border: 'none',
+            background: subTab === 'public' ? '#ffffff' : 'transparent',
+            color: subTab === 'public' ? '#1677ff' : '#64748b',
+            fontWeight: 800,
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            boxShadow: subTab === 'public' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(16, 185, 129, 0.05)'
+            gap: '6px'
+          }}
+        >
+          <BarChart2 size={16} /> 실시간 공공 측정
+        </button>
+        <button
+          onClick={() => setSubTab('citizen')}
+          style={{
+            padding: '10px',
+            borderRadius: '10px',
+            border: 'none',
+            background: subTab === 'citizen' ? '#ffffff' : 'transparent',
+            color: subTab === 'citizen' ? '#1677ff' : '#64748b',
+            fontWeight: 800,
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            boxShadow: subTab === 'citizen' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
+          }}
+        >
+          <TestTube size={16} /> 시민 키트 측정
+        </button>
+      </div>
+
+      {/* ======================================================== */}
+      {/* SUB-TAB 1: 실시간 공공 측정 정보 (Open API Key 연동) */}
+      {/* ======================================================== */}
+      {subTab === 'public' && (
+        <div>
+          {/* Station Selection */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+            {BUSAN_RIVER_STATIONS.map(st => (
+              <button
+                key={st.id}
+                onClick={() => setSelectedStationId(st.id)}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '20px',
+                  border: selectedStationId === st.id ? '2px solid #1677ff' : '1px solid #cbd5e1',
+                  background: selectedStationId === st.id ? '#eff6ff' : '#ffffff',
+                  color: selectedStationId === st.id ? '#1677ff' : '#64748b',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer'
+                }}
+              >
+                {st.river}
+              </button>
+            ))}
+          </div>
+
+          {/* Integrated Grade Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #1677ff 0%, #0958d9 100%)',
+            color: 'white',
+            padding: '20px',
+            borderRadius: '20px',
+            marginBottom: '14px',
+            boxShadow: '0 10px 24px rgba(22, 119, 255, 0.3)'
           }}>
-            <div style={{ textAlign: 'center' }}>
-              <Camera size={48} color="#10b981" style={{ marginBottom: '8px' }} />
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#10b981' }}>
-                AI 스캐닝 진행 중... ({scanProgress}%)
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
+                📍 {realtimeData.stationName}
+              </span>
+              <span style={{ fontSize: '0.72rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <ShieldCheck size={14} /> 국립환경과학원 연동
+              </span>
+            </div>
+
+            <div style={{ fontSize: '0.82rem', opacity: 0.9 }}>통합 수질 지표 평가</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 900, margin: '4px 0 10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Droplet size={28} /> {metrics.grade.value}
+            </div>
+
+            <div style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.15)', padding: '8px 12px', borderRadius: '10px' }}>
+              공공데이터포털 API 실시간 데이터 연동 완료
+            </div>
+          </div>
+
+          {/* Metric Details Cards */}
+          <div style={{ background: 'white', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0', marginBottom: '14px' }}>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: '#0f172a' }}>
+              <Activity size={16} color="#1677ff" /> {realtimeData.river} 실시간 공공 측정 지표
+            </h4>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>BOD (생화학)</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, marginTop: '2px', color: '#0f172a' }}>{metrics.bod.value}</div>
               </div>
-              {/* Progress Bar */}
-              <div style={{ width: '180px', height: '6px', background: 'rgba(255,255,255,0.2)', borderRadius: '3px', margin: '12px auto 0', overflow: 'hidden' }}>
-                <div style={{ width: `${scanProgress}%`, height: '100%', background: '#10b981', transition: 'width 0.3s' }}></div>
+              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>DO (용존산소)</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, marginTop: '2px', color: '#0f172a' }}>{metrics.do.value}</div>
+              </div>
+              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>pH (산도)</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, marginTop: '2px', color: '#0f172a' }}>{metrics.ph.value}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                <span style={{ color: '#64748b' }}>TDS (고형물)</span>
+                <b>{metrics.tds.value}</b>
+              </div>
+              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                <span style={{ color: '#64748b' }}>수온</span>
+                <b>{metrics.waterTemp.value}</b>
               </div>
             </div>
           </div>
 
-          {/* Bottom Actions */}
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', opacity: 0.7, marginBottom: '12px' }}>
-              타임스탬프: 2026-08-13 18:30:12 KST (위변조 방지 기기서명 적용)
+          {/* 24-hour Trend List */}
+          <div style={{ background: 'white', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: '10px', color: '#0f172a' }}>
+              📈 24시간 BOD 수질 변화 추이
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', textAlign: 'center' }}>
+              {bodTrend24h.map((t, i) => (
+                <div key={i} style={{ background: '#f1f5f9', padding: '8px 2px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.62rem', color: '#64748b' }}>{t.time}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1677ff', marginTop: '2px' }}>{t.bod}</div>
+                </div>
+              ))}
             </div>
-            <button className="btn-secondary" onClick={() => setStep('select')} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none' }}>
-              취소하기
-            </button>
           </div>
         </div>
       )}
 
-      {/* STEP 3: Scan Complete Result Modal */}
-      {step === 'result' && (
-        <div className="card" style={{ padding: '24px', textAlign: 'center', background: 'linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%)', border: '2px solid #10b981' }}>
-          <div style={{ display: 'inline-flex', background: '#d1fae5', color: '#059669', padding: '16px', borderRadius: '50%', marginBottom: '16px' }}>
-            <CheckCircle2 size={48} />
+      {/* ======================================================== */}
+      {/* SUB-TAB 2: 시민 키트 측정 (Step-by-Step Interactive Flow) */}
+      {/* ======================================================== */}
+      {subTab === 'citizen' && (
+        <div>
+          {/* Step Breadcrumb Progress Bar matching specification image */}
+          <div style={{ background: 'white', padding: '12px 14px', borderRadius: '16px', marginBottom: '16px', border: '1px solid #e2e8f0', fontSize: '0.72rem', fontWeight: 800, color: '#64748b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: citizenStep === 'check_kit' || citizenStep === 'shop_list' ? '#1677ff' : '#94a3b8' }}>1. 측정시작/대여</span>
+            <ArrowRight size={12} />
+            <span style={{ color: citizenStep === 'qr_rent' ? '#1677ff' : '#94a3b8' }}>2. QR대여</span>
+            <ArrowRight size={12} />
+            <span style={{ color: citizenStep === 'camera_scan' || citizenStep === 'ai_analysis' ? '#1677ff' : '#94a3b8' }}>3. 촬영/AI판독</span>
+            <ArrowRight size={12} />
+            <span style={{ color: citizenStep === 'result' ? '#1677ff' : '#94a3b8' }}>4. 결과저장</span>
           </div>
 
-          <span className="badge badge-dongbaek" style={{ fontSize: '0.85rem', padding: '6px 14px', marginBottom: '12px' }}>
-            <Sparkles size={14} /> 동백전 +1,000원 캐시백 적립 완료!
-          </span>
+          {/* Step 1: Check Kit */}
+          {citizenStep === 'check_kit' && (
+            <div>
+              <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '14px', textAlign: 'center' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#eff6ff', color: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <TestTube size={32} />
+                </div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '6px', color: '#0f172a' }}>
+                  시민 수질 측정 시작
+                </h3>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px', lineHeight: 1.5 }}>
+                  측정 키트를 보유하고 계신가요?<br />키트가 없으시면 가까운 대여 상점에서 QR로 무료 대여할 수 있습니다.
+                </p>
 
-          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '8px', marginBottom: '4px' }}>
-            수질 측정 검증 성공
-          </h3>
-          <p style={{ fontSize: '0.82rem', color: 'var(--gray-500)', marginBottom: '20px' }}>
-            입력된 데이터는 위변조 불가능한 블록체인 해시로 기록되었습니다.
-          </p>
+                <div style={{ display: 'grid', gap: '10px' }}>
+                  <button 
+                    className="btn-submit"
+                    onClick={() => {
+                      setCitizenStep('camera_scan');
+                    }}
+                    style={{ margin: 0 }}
+                  >
+                    📷 키트 보유 중 (바로 카메라 촬영 시작)
+                  </button>
 
-          <div style={{ background: 'white', padding: '16px', borderRadius: '16px', textAlign: 'left', marginBottom: '20px', border: '1px solid var(--gray-200)' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: '10px', color: 'var(--gray-900)' }}>
-              📍 측정 결과 요약
+                  <button 
+                    onClick={() => setCitizenStep('shop_list')}
+                    style={{ width: '100%', padding: '14px', borderRadius: '16px', border: '1.5px solid #1677ff', background: '#ffffff', color: '#1677ff', fontWeight: 800, fontSize: '0.92rem', cursor: 'pointer' }}
+                  >
+                    🏪 키트 없음 (대여처 상점 목록 보기)
+                  </button>
+                </div>
+              </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '6px 0', borderBottom: '1px solid var(--gray-100)' }}>
-              <span color="var(--gray-500)">위치:</span>
-              <b>임하천 중류 A구역 (동백교 하단)</b>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '6px 0', borderBottom: '1px solid var(--gray-100)' }}>
-              <span color="var(--gray-500)">수질 등급:</span>
-              <b style={{ color: 'var(--primary)' }}>1급수 (매우 좋음)</b>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '6px 0', borderBottom: '1px solid var(--gray-100)' }}>
-              <span color="var(--gray-500)">BOD 측정치:</span>
-              <b>1.4 ppm</b>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '6px 0' }}>
-              <span color="var(--gray-500)">블록체인 Hash:</span>
-              <b style={{ fontSize: '0.72rem', color: 'var(--blue)' }}>0x8f2a...9b31</b>
-            </div>
-          </div>
+          )}
 
-          <button className="btn-primary" onClick={() => setStep('select')}>
-            <RefreshCw size={18} /> 추가 측정하기
-          </button>
+          {/* Step 2: Shop List */}
+          {citizenStep === 'shop_list' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
+                  🏪 주변 대여처 (상점) 목록
+                </h3>
+                <button 
+                  onClick={() => setCitizenStep('check_kit')}
+                  style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  ◀ 뒤로가기
+                </button>
+              </div>
+
+              {rentalShops.map(shop => (
+                <div key={shop.id} style={{ background: 'white', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>{shop.name}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>📍 {shop.location} • 거리 {shop.distance}</div>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', background: '#d1fae5', color: '#065f46', padding: '3px 8px', borderRadius: '10px', fontWeight: 800 }}>
+                      {shop.stock}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedShop(shop);
+                      setCitizenStep('qr_rent');
+                    }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '12px', background: '#1677ff', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '6px' }}
+                  >
+                    <QrCode size={16} /> QR 코드로 대여하기
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Step 3: QR Rent Modal */}
+          {citizenStep === 'qr_rent' && (
+            <div style={{ background: 'white', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+              <span style={{ background: '#eff6ff', color: '#1677ff', padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800 }}>
+                {selectedShop?.name || '상점 대여'}
+              </span>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginTop: '10px', marginBottom: '6px' }}>
+                QR 코드 스캔 및 대여
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px' }}>
+                상점에 비치된 대여 QR 코드를 스마트폰 카메라로 스캔하세요.
+              </p>
+
+              <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px', display: 'inline-block', border: '2px dashed #1677ff', marginBottom: '20px' }}>
+                <QrCode size={140} color="#1677ff" />
+              </div>
+
+              <button 
+                className="btn-submit"
+                onClick={() => setCitizenStep('camera_scan')}
+                style={{ margin: 0 }}
+              >
+                ✅ QR 대여 완료 (촬영 단계로 이동)
+              </button>
+            </div>
+          )}
+
+          {/* Step 4: Camera Scan */}
+          {citizenStep === 'camera_scan' && (
+            <div style={{ background: '#000000', borderRadius: '24px', padding: '20px', color: 'white', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#10b981', marginBottom: '10px' }}>
+                📷 수질 측정 시약 키트 촬영 중
+              </div>
+              <div style={{ height: '220px', border: '2px dashed #10b981', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(16, 185, 129, 0.1)', marginBottom: '16px' }}>
+                <div>
+                  <Camera size={48} color="#10b981" />
+                  <div style={{ fontSize: '0.8rem', marginTop: '8px', color: '#10b981' }}>
+                    시약 발색 부위를 프레임 안 중앙에 맞추세요
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                className="btn-submit"
+                onClick={() => {
+                  setCitizenStep('ai_analysis');
+                  setScanProgress(0);
+                }}
+                style={{ margin: 0 }}
+              >
+                📸 찰칵! 촬영하고 AI 판독 시작
+              </button>
+            </div>
+          )}
+
+          {/* Step 5: AI Analysis */}
+          {citizenStep === 'ai_analysis' && (
+            <div style={{ background: 'white', padding: '30px 20px', borderRadius: '24px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+              <Sparkles size={48} color="#1677ff" style={{ margin: '0 auto 12px' }} />
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px' }}>
+                AI 시약 색상 분석 진행 중...
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px' }}>
+                스마트폰 카메라로 촬영된 시약 발색 색상을 AI가 정밀 판독합니다 ({scanProgress}%)
+              </p>
+
+              <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${scanProgress}%`, height: '100%', background: '#1677ff', transition: 'width 0.3s' }}></div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Save Result & Cashback Reward */}
+          {citizenStep === 'result' && (
+            <div style={{ background: 'linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%)', padding: '24px', borderRadius: '24px', border: '2px solid #10b981', textAlign: 'center' }}>
+              <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <CheckCircle2 size={36} />
+              </div>
+
+              <span style={{ background: '#059669', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '10px' }}>
+                <Sparkles size={14} /> 동백전 +1,000원 적립 완료!
+              </span>
+
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '4px', color: '#0f172a' }}>
+                측정 결과 저장 성공
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '20px' }}>
+                시민 판독 결과가 하천 지도 데이터베이스에 등록되었습니다.
+              </p>
+
+              <div style={{ background: 'white', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'left', marginBottom: '16px', fontSize: '0.82rem' }}>
+                <div style={{ padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>📍 위치: <b>{realtimeData.river} 수질 측정 구역</b></div>
+                <div style={{ padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>💧 판정 등급: <b style={{ color: '#059669' }}>1급수 (우수)</b></div>
+                <div style={{ padding: '4px 0' }}>🧪 BOD 판독치: <b>1.6 ppm (AI 컬러매칭 성공)</b></div>
+              </div>
+
+              <button 
+                className="btn-submit"
+                onClick={() => setCitizenStep('check_kit')}
+                style={{ margin: 0 }}
+              >
+                <RefreshCw size={16} /> 다시 측정하기
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

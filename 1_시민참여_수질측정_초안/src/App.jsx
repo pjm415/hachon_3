@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import HomeTab from './components/HomeTab';
+import MeasureTab from './components/MeasureTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
 import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2 } from 'lucide-react';
 import './index.css';
@@ -13,8 +14,8 @@ const INITIAL_RECORDS = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home'); // 'home' shows map
-  const [selectedStationId, setSelectedStationId] = useState('2014A65'); // Default: 온천천
+  const [activeTab, setActiveTab] = useState('home'); // 'home' or 'measure'
+  const [selectedStationId, setSelectedStationId] = useState('2014A65');
   const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
   const [walkSteps, setWalkSteps] = useState(77);
@@ -68,7 +69,7 @@ export default function App() {
     setShowFeedDrawer(true);
   };
 
-  // Like Record Toggle
+  // Toggle Like Record
   const handleToggleLike = (recordId) => {
     setRecords(records.map(r => {
       if (r.id === recordId) {
@@ -83,7 +84,12 @@ export default function App() {
     }));
   };
 
-  // Submit Upload Form
+  // Handle citizen measurement addition
+  const handleAddMeasurement = (newMeasure) => {
+    showNotification("🎉 시민 수질 측정 완료! 동백전 +1,000원 적립되었습니다.");
+  };
+
+  // Handle Upload Form Submit
   const handleUploadSubmit = (e) => {
     e.preventDefault();
     const newRecord = {
@@ -161,27 +167,33 @@ export default function App() {
         </header>
 
         {/* 2. Sub-header River Filter Tabs */}
-        <div className="river-tabs">
-          {BUSAN_RIVER_STATIONS.map((st) => (
-            <button
-              key={st.id}
-              onClick={() => setSelectedStationId(st.id)}
-              className={`river-tab-btn ${selectedStationId === st.id ? 'is-active' : ''}`}
-            >
-              {st.river}
-            </button>
-          ))}
-        </div>
+        {activeTab === 'home' && (
+          <div className="river-tabs">
+            {BUSAN_RIVER_STATIONS.map((st) => (
+              <button
+                key={st.id}
+                onClick={() => setSelectedStationId(st.id)}
+                className={`river-tab-btn ${selectedStationId === st.id ? 'is-active' : ''}`}
+              >
+                {st.river}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* 3. Center Main View: Kakao Map with Photo Pins */}
-        <HomeTab 
-          selectedStationId={selectedStationId} 
-          setSelectedStationId={setSelectedStationId}
-          records={records}
-          onSelectPhotoPin={handleSelectPhotoPin}
-        />
+        {/* 3. Main Center Content Area: Home (Map) OR Measure Tab */}
+        {activeTab === 'home' ? (
+          <HomeTab 
+            selectedStationId={selectedStationId} 
+            setSelectedStationId={setSelectedStationId}
+            records={records}
+            onSelectPhotoPin={handleSelectPhotoPin}
+          />
+        ) : (
+          <MeasureTab onAddMeasurement={handleAddMeasurement} />
+        )}
 
-        {/* 4. Bottom Navigation Bar matching user's exact screenshot layout (Blue Theme) */}
+        {/* 4. Bottom Navigation Bar matching user screenshot */}
         <nav className="bottom-nav-clean">
           {/* Tab 1: 홈 (Home) */}
           <button 
@@ -192,10 +204,10 @@ export default function App() {
             <span>홈</span>
           </button>
 
-          {/* Tab 2: 수질 측정 */}
+          {/* Tab 2: 수질 측정 (Sub-tabs for Public & Citizen Measurement) */}
           <button 
-            className="nav-tab-item"
-            onClick={() => showNotification("🧪 수질 측정 기능은 아직 준비 중입니다.")}
+            className={`nav-tab-item ${activeTab === 'measure' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('measure')}
           >
             <Droplets size={22} />
             <span>수질 측정</span>
