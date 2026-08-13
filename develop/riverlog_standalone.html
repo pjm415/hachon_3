@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f2e2a" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>리버로그 | 시민참여 수질 측정 & 동백전 리워드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<!-- Kakao Maps API SDK -->
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=fdd1b8d20a638e709f6f5b19a4c74955&autoload=false&libraries=services"></script>
+
+<style>
+:root {
+  --bg-stage: #0f2e2a;
+  --bg-shell: #ffffff;
+  --primary: #1e534c;
+  --primary-light: #e6f4f1;
+  --text-dark: #0f2e2a;
+  --text-muted: #5a7571;
+  --gray-100: #f1f5f4;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --positive: #10b981;
+  --negative: #ef4444;
+  --font-serif: 'Noto Serif KR', serif;
+  --font-sans: 'Pretendard', -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-stage);
+  color: var(--text-dark);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stage {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 410px;
+  height: 100vh;
+  max-height: 840px;
+  background: var(--bg-shell);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+@media (min-width: 440px) {
+  .app-shell {
+    height: 830px;
+    border-radius: 36px;
+    border: 8px solid #081d1a;
+  }
+}
+
+.topbar {
+  height: 56px;
+  padding: 0 16px;
+  background: var(--bg-stage);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-drop { font-size: 1.2rem; }
+
+.brand-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #ffffff;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.river-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-stage);
+  overflow-x: auto;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.river-tab-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.river-tab-btn.is-active {
+  background: #ffffff;
+  color: var(--bg-stage);
+  font-weight: 700;
+}
+
+.map-view {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background: #e2e8f0;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.river-name-pill {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 20;
+  background: rgba(15, 46, 42, 0.88);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.river-name-pill strong {
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex;
+  gap: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.tag-positive { background: var(--positive); }
+.dot.tag-negative { background: var(--negative); }
+.dot.dot-me { background: #3b82f6; }
+
+.locate-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  z-index: 20;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.preview-dock {
+  padding: 16px;
+  background: white;
+  border-top: 1px solid var(--gray-200);
+}
+
+.preview-dock-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.preview-count {
+  font-size: 0.75rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.strip-card {
+  min-width: 150px;
+  background: var(--gray-100);
+  border-radius: 14px;
+  padding: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.strip-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.strip-tag.tag-positive { background: #d1fae5; color: #065f46; }
+.strip-tag.tag-negative { background: #fee2e2; color: #991b1b; }
+
+.strip-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.strip-author {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: rgba(15, 46, 42, 0.96);
+  backdrop-filter: blur(12px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 50;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nav-item.is-active {
+  color: #2dd4bf;
+  font-weight: 700;
+}
+
+.sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 20px;
+  z-index: 100;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sheet.show { transform: translateY(0); }
+.sheet-handle { width: 36px; height: 4px; background: var(--gray-300); border-radius: 2px; margin: 0 auto 16px; }
+.sheet-close { position: absolute; top: 16px; right: 16px; background: var(--gray-100); border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: 700; }
+</style>
+</head>
+<body>
+
+  <div class="stage">
+    <div class="app-shell">
+
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-drop">💧</span>
+          <span class="brand-name">리버로그</span>
+        </div>
+        <button class="icon-btn" type="button" aria-label="알림" onclick="alert('🔔 수질 측정 알림이 없습니다.')">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7Z"/>
+            <path d="M10 19a2 2 0 0 0 4 0"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="river-tabs" id="riverTabs">
+        <button class="river-tab-btn is-active" onclick="switchRiver('2014A65', '온천천', '세병교 지점', 35.1970, 129.0835)">온천천</button>
+        <button class="river-tab-btn" onclick="switchRiver('2014A70', '동천', '범일교 지점', 35.1432, 129.0625)">동천</button>
+        <button class="river-tab-btn" onclick="switchRiver('2014A85', '괴정천', '하굿둑 지점', 35.0985, 128.9680)">괴정천</button>
+      </div>
+
+      <main class="map-view">
+        <div class="river-name-pill">
+          <strong id="riverPillName">온천천</strong><span id="riverPillArea">세병교 지점</span>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="map-legend">
+          <span class="legend-item"><i class="dot tag-positive"></i>긍정 기록</span>
+          <span class="legend-item"><i class="dot tag-negative"></i>부정 기록</span>
+          <span class="legend-item"><i class="dot dot-me"></i>내 위치</span>
+        </div>
+
+        <button class="locate-btn" id="locateBtn" type="button" aria-label="내 위치 찾기" onclick="alert('📍 내 위치: 부산 연제구 온천천 주변입니다.')">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+          </svg>
+        </button>
+      </main>
+
+      <section class="preview-dock">
+        <div class="preview-dock-head">
+          <span>주변 사람들의 기록</span>
+          <span class="preview-count">4건</span>
+        </div>
+        <div class="strip" id="previewStrip">
+          <div class="strip-card" onclick="openSheet('맑은 물 관찰', '최수조 (주민)', '10분 전', '세병교 하부 송사리 떼 관찰됨, 악취 없음', 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=400&q=80')">
+            <span class="strip-tag tag-positive">맑은 물 관찰</span>
+            <div class="strip-text">세병교 하부 송사리 떼 관찰됨, 악취 없음</div>
+            <div class="strip-author">최수조 (주민) • 10분 전</div>
+          </div>
+          <div class="strip-card" onclick="openSheet('오염 제보', '최진아 (시민기자)', '25분 전', '동천 범일교 하구 약간의 유류 띠 발견됨', 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=400&q=80')">
+            <span class="strip-tag tag-negative">오염 제보</span>
+            <div class="strip-text">동천 범일교 하구 약간의 유류 띠 발견됨</div>
+            <div class="strip-author">최진아 (시민기자) • 25분 전</div>
+          </div>
+          <div class="strip-card" onclick="openSheet('수질 측정', '기점수 (측정단)', '40분 전', 'DO 용존산소 9.2mg/L로 매우 우수 평가', 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=400&q=80')">
+            <span class="strip-tag tag-positive">수질 측정</span>
+            <div class="strip-text">DO 용존산소 9.2mg/L로 매우 우수 평가</div>
+            <div class="strip-author">기점수 (측정단) • 40분 전</div>
+          </div>
+        </div>
+      </section>
+
+      <nav class="bottom-nav">
+        <button class="nav-item" type="button">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/></svg>
+          <span>피드</span>
+        </button>
+        <button class="nav-item is-active" type="button">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4 3 6.5v14L9 18l6 2.5 6-2.5v-14L15 6.5 9 4Z"/><path d="M9 4v14M15 6.5v14"/></svg>
+          <span>지도</span>
+        </button>
+        <button class="nav-item" type="button">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 10V6a2 2 0 0 1 2-2h4l2 2h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2"/><circle cx="8" cy="16" r="3"/></svg>
+          <span>측정</span>
+        </button>
+        <button class="nav-item" type="button">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M16 12h.01"/><path d="M3 10h18"/></svg>
+          <span>지갑</span>
+        </button>
+        <button class="nav-item" type="button">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v6c0 4.5 3.2 7.6 8 9 4.8-1.4 8-4.5 8-9V6l-8-3Z"/></svg>
+          <span>상황실</span>
+        </button>
+      </nav>
+
+      <!-- 기록 상세 바텀시트 -->
+      <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+      <div class="sheet" id="sheet" aria-hidden="true">
+        <div class="sheet-handle"></div>
+        <button class="sheet-close" id="sheetClose" type="button" onclick="closeSheet()">✕</button>
+        <div class="sheet-body">
+          <img id="sheetPhoto" style="width:100%;height:180px;object-fit:cover;border-radius:14px;margin-bottom:12px;" alt="" />
+          <div class="sheet-info">
+            <span id="sheetTag" class="strip-tag tag-positive"></span>
+            <div id="sheetTime" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;"></div>
+            <p id="sheetComment" style="font-size:0.92rem;font-weight:600;line-height:1.4;margin-bottom:8px;"></p>
+            <span id="sheetAuthor" style="font-size:0.75rem;color:var(--text-muted);"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    var map;
+    var marker;
+
+    function initMap() {
+      if (window.kakao && window.kakao.maps) {
+        window.kakao.maps.load(function() {
+          var container = document.getElementById('map');
+          var options = {
+            center: new window.kakao.maps.LatLng(35.1970, 129.0835),
+            level: 4
+          };
+          map = new window.kakao.maps.Map(container, options);
+          marker = new window.kakao.maps.Marker({
+            position: new window.kakao.maps.LatLng(35.1970, 129.0835)
+          });
+          marker.setMap(map);
+        });
+      }
+    }
+
+    function switchRiver(id, name, area, lat, lng) {
+      document.getElementById('riverPillName').innerText = name;
+      document.getElementById('riverPillArea').innerText = area;
+
+      if (map && window.kakao && window.kakao.maps) {
+        var moveLatLon = new window.kakao.maps.LatLng(lat, lng);
+        map.panTo(moveLatLon);
+        if (marker) {
+          marker.setPosition(moveLatLon);
+        }
+      }
+    }
+
+    function openSheet(tag, author, time, comment, photo) {
+      document.getElementById('sheetTag').innerText = tag;
+      document.getElementById('sheetAuthor').innerText = '작성자: ' + author;
+      document.getElementById('sheetTime').innerText = time;
+      document.getElementById('sheetComment').innerText = comment;
+      document.getElementById('sheetPhoto').src = photo;
+
+      document.getElementById('sheetBackdrop').classList.add('show');
+      document.getElementById('sheet').classList.add('show');
+    }
+
+    function closeSheet() {
+      document.getElementById('sheetBackdrop').classList.remove('show');
+      document.getElementById('sheet').classList.remove('show');
+    }
+
+    window.onload = initMap;
+  </script>
+</body>
+</html>
