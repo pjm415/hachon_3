@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import HomeTab from './components/HomeTab';
 import MeasureTab from './components/MeasureTab';
 import BenefitsTab from './components/BenefitsTab';
+import MyPageTab from './components/MyPageTab';
 import { BUSAN_RIVER_STATIONS } from './api/waterQualityApi';
 import { Home, Droplets, Footprints, Gift, User, Bell, Camera, Pause, Sparkles, Image as ImageIcon, CheckCircle, AlertTriangle, Heart, MessageCircle, Share2 } from 'lucide-react';
 import './index.css';
@@ -15,7 +16,7 @@ const INITIAL_RECORDS = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home'); // 'home', 'measure', 'benefits'
+  const [activeTab, setActiveTab] = useState('home'); // 'home', 'measure', 'benefits', 'mypage'
   const [selectedStationId, setSelectedStationId] = useState('2014A65');
   const [isWalking, setIsWalking] = useState(false);
   const [walkSeconds, setWalkSeconds] = useState(0);
@@ -182,7 +183,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 3. Main Center Content Area: Home / Measure / Benefits */}
+        {/* 3. Main Center Content Area: Home / Measure / Benefits / MyPage */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
           {activeTab === 'home' && (
             <HomeTab 
@@ -199,6 +200,10 @@ export default function App() {
 
           {activeTab === 'benefits' && (
             <BenefitsTab onShowToast={showNotification} />
+          )}
+
+          {activeTab === 'mypage' && (
+            <MyPageTab onShowToast={showNotification} />
           )}
         </div>
 
@@ -238,7 +243,7 @@ export default function App() {
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#1677ff', marginTop: '36px' }}>산책하기</span>
           </div>
 
-          {/* Tab 4: 혜택 (Dongbaekjeon Wallet + Coupons + Partner Merchants) */}
+          {/* Tab 4: 혜택 */}
           <button 
             className={`nav-tab-item ${activeTab === 'benefits' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('benefits')}
@@ -247,10 +252,10 @@ export default function App() {
             <span>혜택</span>
           </button>
 
-          {/* Tab 5: 마이페이지 */}
+          {/* Tab 5: 마이페이지 (Profile, Steps, Photo Gallery, Attendance, Logged-in Account) */}
           <button 
-            className="nav-tab-item"
-            onClick={() => showNotification("👤 마이페이지 기능은 아직 준비 중입니다.")}
+            className={`nav-tab-item ${activeTab === 'mypage' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('mypage')}
           >
             <User size={22} />
             <span>마이페이지</span>
