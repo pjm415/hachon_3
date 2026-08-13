@@ -1,15 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Droplet, Award, Zap, ChevronRight, ShieldCheck, Activity, Thermometer, Gauge, TestTube, MapPin } from 'lucide-react';
 import { BUSAN_RIVER_STATIONS, getStationWaterData } from '../api/waterQualityApi';
+
+const STATION_COORDS = {
+  '2014A65': { lat: 35.1970, lng: 129.0835 }, // 온천천 세병교
+  '2014A70': { lat: 35.1432, lng: 129.0625 }, // 동천 범일교
+  '2014A85': { lat: 35.0985, lng: 128.9680 }, // 괴정천 하굿둑
+  '2014IMHA': { lat: 35.1634, lng: 129.1623 } // 임하천
+};
 
 export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
   const [selectedStationId, setSelectedStationId] = useState('2014A65'); // Default: 온천천
   const realtimeData = getStationWaterData(selectedStationId);
   const { metrics, bodTrend24h } = realtimeData;
+  const mapContainerRef = useRef(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Kakao Map initialization & marker update
+  useEffect(() => {
+    if (window.kakao && window.kakao.maps && mapContainerRef.current) {
+      const coords = STATION_COORDS[selectedStationId] || STATION_COORDS['2014A65'];
+      const container = mapContainerRef.current;
+      const options = {
+        center: new window.kakao.maps.LatLng(coords.lat, coords.lng),
+        level: 4
+      };
+
+      const map = new window.kakao.maps.Map(container, options);
+      const markerPosition = new window.kakao.maps.LatLng(coords.lat, coords.lng);
+      
+      const marker = new window.kakao.maps.Marker({
+        position: markerPosition
+      });
+      marker.setMap(map);
+      setMapLoaded(true);
+    }
+  }, [selectedStationId]);
 
   return (
     <div className="home-tab" style={{ padding: '16px' }}>
-      {/* Station Selector Buttons (온천천, 동천, 괴정천, 임하천) */}
+      {/* Station Selector Buttons */}
       <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '4px' }}>
         {BUSAN_RIVER_STATIONS.map((st) => (
           <button
@@ -31,6 +61,29 @@ export default function HomeTab({ pins, onNavigateTab, totalEarned }) {
             {st.river}
           </button>
         ))}
+      </div>
+
+      {/* Real Kakao Map Canvas Container */}
+      <div style={{
+        position: 'relative',
+        height: '160px',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        border: '1px solid var(--gray-200)',
+        marginBottom: '14px',
+        background: '#e2e8f0'
+      }}>
+        <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }}></div>
+        {!mapLoaded && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(255,255,255,0.85)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.8rem', color: 'var(--gray-700)', fontWeight: 700
+          }}>
+            🟡 카카오 지도 로딩 중 (도메인 등록 확인)
+          </div>
+        )}
       </div>
 
       {/* 1. Main River Status Banner */}
